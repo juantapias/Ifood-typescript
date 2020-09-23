@@ -1,0 +1,3516 @@
+From 20bd47a198289986a6773287058951443653c162 Mon Sep 17 00:00:00 2001
+From: Juan Tapias <juantapias@Juan-Tapias.local>
+Date: Wed, 16 Sep 2020 16:03:37 -0500
+Subject: [PATCH] Adfoodio test by Juan Tapias
+
+---
+ api/package-lock.json                         | 492 +++++++++++++---
+ api/package.json                              |   7 +-
+ api/src/controllers/index.controller.ts       |   5 +
+ api/src/controllers/order.controller.ts       |  27 +
+ api/src/database.ts                           |   7 +
+ api/src/models/orders.ts                      |  38 ++
+ api/src/routes/index.routes.ts                |  11 +
+ api/src/routes/order.routes.ts                |  16 +
+ api/src/server.ts                             |  28 +-
+ api/tsconfig.json                             |   8 +-
+ docker-compose.yml                            |  14 +-
+ frontend/package-lock.json                    | 545 ++++++++++++++++++
+ frontend/package.json                         |   5 +
+ frontend/src/App.css                          |  10 +-
+ frontend/src/App.tsx                          | 160 ++++-
+ frontend/src/assets/images/desserts.png       | Bin 0 -> 9008 bytes
+ frontend/src/assets/images/drinks.png         | Bin 0 -> 3239 bytes
+ frontend/src/assets/images/foods.png          | Bin 0 -> 6256 bytes
+ frontend/src/components/billing/Billing.css   |  32 +
+ frontend/src/components/billing/Billing.tsx   |  45 ++
+ .../billing/components/sumary/Sumary.tsx      |  49 ++
+ .../billing/components/total/Total.tsx        | 110 ++++
+ frontend/src/components/menu/Menu.css         |  23 +
+ frontend/src/components/menu/Menu.tsx         |  28 +
+ .../components/menu/components/MenuItems.tsx  |  32 +
+ .../menu/components/desserts/DessertMenu.tsx  |  81 +++
+ .../menu/components/drinks/DrinkMenu.tsx      |  81 +++
+ .../menu/components/foods/FoodMenu.tsx        |  79 +++
+ .../menu/components/title/Title.tsx           |  16 +
+ frontend/src/components/order/Order.css       |   9 +
+ frontend/src/components/order/Order.tsx       |  54 ++
+ frontend/src/index.tsx                        |   2 +-
+ frontend/src/interfaces/NewOrder.ts           |   6 +
+ frontend/src/interfaces/Order.ts              |   5 +
+ frontend/src/interfaces/ResetOrder.ts         |   3 +
+ frontend/src/services/Api.tsx                 |   2 +
+ package-lock.json                             | 176 ++++++
+ 37 files changed, 2083 insertions(+), 123 deletions(-)
+ create mode 100644 api/src/controllers/index.controller.ts
+ create mode 100644 api/src/controllers/order.controller.ts
+ create mode 100644 api/src/database.ts
+ create mode 100644 api/src/models/orders.ts
+ create mode 100644 api/src/routes/index.routes.ts
+ create mode 100644 api/src/routes/order.routes.ts
+ create mode 100644 frontend/src/assets/images/desserts.png
+ create mode 100644 frontend/src/assets/images/drinks.png
+ create mode 100644 frontend/src/assets/images/foods.png
+ create mode 100644 frontend/src/components/billing/Billing.css
+ create mode 100644 frontend/src/components/billing/Billing.tsx
+ create mode 100644 frontend/src/components/billing/components/sumary/Sumary.tsx
+ create mode 100644 frontend/src/components/billing/components/total/Total.tsx
+ create mode 100644 frontend/src/components/menu/Menu.css
+ create mode 100644 frontend/src/components/menu/Menu.tsx
+ create mode 100644 frontend/src/components/menu/components/MenuItems.tsx
+ create mode 100644 frontend/src/components/menu/components/desserts/DessertMenu.tsx
+ create mode 100644 frontend/src/components/menu/components/drinks/DrinkMenu.tsx
+ create mode 100644 frontend/src/components/menu/components/foods/FoodMenu.tsx
+ create mode 100644 frontend/src/components/menu/components/title/Title.tsx
+ create mode 100644 frontend/src/components/order/Order.css
+ create mode 100644 frontend/src/components/order/Order.tsx
+ create mode 100644 frontend/src/interfaces/NewOrder.ts
+ create mode 100644 frontend/src/interfaces/Order.ts
+ create mode 100644 frontend/src/interfaces/ResetOrder.ts
+ create mode 100644 frontend/src/services/Api.tsx
+ create mode 100644 package-lock.json
+
+diff --git a/api/package-lock.json b/api/package-lock.json
+index 4646f6c..ad384f8 100644
+--- a/api/package-lock.json
++++ b/api/package-lock.json
+@@ -37,8 +37,7 @@
+     "@types/color-name": {
+       "version": "1.1.1",
+       "resolved": "https://registry.npmjs.org/@types/color-name/-/color-name-1.1.1.tgz",
+-      "integrity": "sha512-rr+OQyAjxze7GgWrSaJwydHStIhHq2lvY3BOC2Mj7KnzI7XK0Uw1TOOdI9lDoajEbSWLiYgoo4f1R51erQfhPQ==",
+-      "dev": true
++      "integrity": "sha512-rr+OQyAjxze7GgWrSaJwydHStIhHq2lvY3BOC2Mj7KnzI7XK0Uw1TOOdI9lDoajEbSWLiYgoo4f1R51erQfhPQ=="
+     },
+     "@types/connect": {
+       "version": "3.4.33",
+@@ -210,13 +209,24 @@
+       "dev": true
+     },
+     "ansi-styles": {
+-      "version": "3.2.1",
+-      "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-3.2.1.tgz",
+-      "integrity": "sha512-VT0ZI6kZRdTh8YyJw3SMbYm/u+NqfsAxEpWO0Pf9sq8/e94WxxOpPKx9FR1FlyCtOVDNOQ+8ntlqFxiRc+r5qA==",
++      "version": "4.2.1",
++      "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.2.1.tgz",
++      "integrity": "sha512-9VGjrMsG1vePxcSweQsN20KY/c4zN0h9fLjqAbwbPfahM3t+NL+M9HC8xeXG2I8pX5NoamTGNuomEUFI7fcUjA==",
+       "requires": {
+-        "color-convert": "^1.9.0"
++        "@types/color-name": "^1.1.1",
++        "color-convert": "^2.0.1"
+       }
+     },
++    "ansicolors": {
++      "version": "0.3.2",
++      "resolved": "https://registry.npmjs.org/ansicolors/-/ansicolors-0.3.2.tgz",
++      "integrity": "sha1-ZlWX3oap/+Oqm/vmyuXG6kJrSXk="
++    },
++    "any-promise": {
++      "version": "1.3.0",
++      "resolved": "https://registry.npmjs.org/any-promise/-/any-promise-1.3.0.tgz",
++      "integrity": "sha1-q8av7tzqUugJzcA3au0845Y10X8="
++    },
+     "anymatch": {
+       "version": "3.1.1",
+       "resolved": "https://registry.npmjs.org/anymatch/-/anymatch-3.1.1.tgz",
+@@ -283,6 +293,11 @@
+       "resolved": "https://registry.npmjs.org/binary-extensions/-/binary-extensions-2.1.0.tgz",
+       "integrity": "sha512-1Yj8h9Q+QDF5FzhMs/c9+6UntbD5MkRfRwac8DoEm9ZfUBZ7tZ55YcGVAzEe4bXsdQHEk+s9S5wsOKVdZrw0tQ=="
+     },
++    "bluebird": {
++      "version": "3.7.2",
++      "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.7.2.tgz",
++      "integrity": "sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg=="
++    },
+     "body-parser": {
+       "version": "1.19.0",
+       "resolved": "https://registry.npmjs.org/body-parser/-/body-parser-1.19.0.tgz",
+@@ -438,6 +453,15 @@
+       "resolved": "https://registry.npmjs.org/camelcase/-/camelcase-5.3.1.tgz",
+       "integrity": "sha512-L28STB170nwWS63UjtlEOE3dldQApaJXZkOI1uMFfzf3rRuPegHaHesyee+YxQ+W6SvRDQV6UrdOdRiR153wJg=="
+     },
++    "cardinal": {
++      "version": "2.1.1",
++      "resolved": "https://registry.npmjs.org/cardinal/-/cardinal-2.1.1.tgz",
++      "integrity": "sha1-fMEFXYItISlU0HsIXeolHMe8VQU=",
++      "requires": {
++        "ansicolors": "~0.3.2",
++        "redeyed": "~2.1.0"
++      }
++    },
+     "chai": {
+       "version": "4.2.0",
+       "resolved": "https://registry.npmjs.org/chai/-/chai-4.2.0.tgz",
+@@ -466,13 +490,27 @@
+       }
+     },
+     "chalk": {
+-      "version": "2.4.2",
+-      "resolved": "https://registry.npmjs.org/chalk/-/chalk-2.4.2.tgz",
+-      "integrity": "sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==",
++      "version": "4.1.0",
++      "resolved": "https://registry.npmjs.org/chalk/-/chalk-4.1.0.tgz",
++      "integrity": "sha512-qwx12AxXe2Q5xQ43Ac//I6v5aXTipYrSESdOgzrN+9XjgEpyjpKuvSGaN4qE93f7TQTlerQQ8S+EQ0EyDoVL1A==",
+       "requires": {
+-        "ansi-styles": "^3.2.1",
+-        "escape-string-regexp": "^1.0.5",
+-        "supports-color": "^5.3.0"
++        "ansi-styles": "^4.1.0",
++        "supports-color": "^7.1.0"
++      },
++      "dependencies": {
++        "has-flag": {
++          "version": "4.0.0",
++          "resolved": "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz",
++          "integrity": "sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ=="
++        },
++        "supports-color": {
++          "version": "7.2.0",
++          "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
++          "integrity": "sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==",
++          "requires": {
++            "has-flag": "^4.0.0"
++          }
++        }
+       }
+     },
+     "check-error": {
+@@ -484,7 +522,6 @@
+       "version": "3.4.2",
+       "resolved": "https://registry.npmjs.org/chokidar/-/chokidar-3.4.2.tgz",
+       "integrity": "sha512-IZHaDeBeI+sZJRX7lGcXsdzgvZqKv6sECqsbErJA4mHWfpRrD8B97kSFN4cQz6nGBGiuFia1MKR4d6c1o8Cv7A==",
+-      "dev": true,
+       "requires": {
+         "anymatch": "~3.1.1",
+         "braces": "~3.0.2",
+@@ -499,8 +536,7 @@
+         "normalize-path": {
+           "version": "3.0.0",
+           "resolved": "https://registry.npmjs.org/normalize-path/-/normalize-path-3.0.0.tgz",
+-          "integrity": "sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==",
+-          "dev": true
++          "integrity": "sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA=="
+         }
+       }
+     },
+@@ -570,18 +606,27 @@
+         "mimic-response": "^1.0.0"
+       }
+     },
++    "cls-bluebird": {
++      "version": "2.1.0",
++      "resolved": "https://registry.npmjs.org/cls-bluebird/-/cls-bluebird-2.1.0.tgz",
++      "integrity": "sha1-N+8eCAqP+1XC9BZPU28ZGeeWiu4=",
++      "requires": {
++        "is-bluebird": "^1.0.2",
++        "shimmer": "^1.1.0"
++      }
++    },
+     "color-convert": {
+-      "version": "1.9.3",
+-      "resolved": "https://registry.npmjs.org/color-convert/-/color-convert-1.9.3.tgz",
+-      "integrity": "sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==",
++      "version": "2.0.1",
++      "resolved": "https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz",
++      "integrity": "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==",
+       "requires": {
+-        "color-name": "1.1.3"
++        "color-name": "~1.1.4"
+       }
+     },
+     "color-name": {
+-      "version": "1.1.3",
+-      "resolved": "https://registry.npmjs.org/color-name/-/color-name-1.1.3.tgz",
+-      "integrity": "sha1-p9BVi9icQveV3UIyj3QIMcpTvCU="
++      "version": "1.1.4",
++      "resolved": "https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz",
++      "integrity": "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA=="
+     },
+     "combined-stream": {
+       "version": "1.0.8",
+@@ -718,6 +763,11 @@
+       "resolved": "https://registry.npmjs.org/delayed-stream/-/delayed-stream-1.0.0.tgz",
+       "integrity": "sha1-3zrhmayt+31ECqrgsp4icrJOxhk="
+     },
++    "denque": {
++      "version": "1.4.1",
++      "resolved": "https://registry.npmjs.org/denque/-/denque-1.4.1.tgz",
++      "integrity": "sha512-OfzPuSZKGcgr96rf1oODnfjqBFmr1DVoc/TrItj3Ohe0Ah1C5WX5Baquw/9U9KovnQ88EqmJbD66rKYUQYN1tQ=="
++    },
+     "depd": {
+       "version": "1.1.2",
+       "resolved": "https://registry.npmjs.org/depd/-/depd-1.1.2.tgz",
+@@ -742,6 +792,11 @@
+         "is-obj": "^2.0.0"
+       }
+     },
++    "dottie": {
++      "version": "2.0.2",
++      "resolved": "https://registry.npmjs.org/dottie/-/dottie-2.0.2.tgz",
++      "integrity": "sha512-fmrwR04lsniq/uSr8yikThDTrM7epXHBAAjH9TbeH3rEA8tdCO7mRzB9hdmdGyJCxF8KERo9CITcm3kGuoyMhg=="
++    },
+     "duplexer3": {
+       "version": "0.1.4",
+       "resolved": "https://registry.npmjs.org/duplexer3/-/duplexer3-0.1.4.tgz",
+@@ -839,9 +894,9 @@
+       "integrity": "sha1-Aljq5NPQwJdN4cFpGI7wBR0dGYg="
+     },
+     "escape-string-regexp": {
+-      "version": "1.0.5",
+-      "resolved": "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz",
+-      "integrity": "sha1-G2HAViGQqN/2rjuyzwIAyhMLhtQ="
++      "version": "4.0.0",
++      "resolved": "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz",
++      "integrity": "sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA=="
+     },
+     "esprima": {
+       "version": "4.0.1",
+@@ -918,11 +973,11 @@
+       }
+     },
+     "find-up": {
+-      "version": "4.1.0",
+-      "resolved": "https://registry.npmjs.org/find-up/-/find-up-4.1.0.tgz",
+-      "integrity": "sha512-PpOwAdQ/YlXQ2vj8a3h8IipDuYRi3wceVQQGYWxNINccq40Anw7BlsEXCMbt1Zt+OLA6Fq9suIpIWD0OsnISlw==",
++      "version": "5.0.0",
++      "resolved": "https://registry.npmjs.org/find-up/-/find-up-5.0.0.tgz",
++      "integrity": "sha512-78/PXT1wlLLDgTzDs7sjq9hzz0vXD+zn+7wypEe4fXQxCmdmqfGsEPQxmiCSQI3ajFV91bVSsvNtrJRiW6nGng==",
+       "requires": {
+-        "locate-path": "^5.0.0",
++        "locate-path": "^6.0.0",
+         "path-exists": "^4.0.0"
+       }
+     },
+@@ -975,6 +1030,14 @@
+       "resolved": "https://registry.npmjs.org/function-bind/-/function-bind-1.1.1.tgz",
+       "integrity": "sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A=="
+     },
++    "generate-function": {
++      "version": "2.3.1",
++      "resolved": "https://registry.npmjs.org/generate-function/-/generate-function-2.3.1.tgz",
++      "integrity": "sha512-eeB5GfMNeevm/GRYq20ShmsaGcmI81kIX2K9XQx5miC8KdHaC6Jm0qQ8ZNeGOi7wYB8OsdxKs+Y2oVuTFuVwKQ==",
++      "requires": {
++        "is-property": "^1.0.2"
++      }
++    },
+     "get-caller-file": {
+       "version": "2.0.5",
+       "resolved": "https://registry.npmjs.org/get-caller-file/-/get-caller-file-2.0.5.tgz",
+@@ -1065,7 +1128,8 @@
+     "has-flag": {
+       "version": "3.0.0",
+       "resolved": "https://registry.npmjs.org/has-flag/-/has-flag-3.0.0.tgz",
+-      "integrity": "sha1-tdRU3CGZriJWmfNGfloH87lVuv0="
++      "integrity": "sha1-tdRU3CGZriJWmfNGfloH87lVuv0=",
++      "dev": true
+     },
+     "has-symbols": {
+       "version": "1.0.1",
+@@ -1127,6 +1191,11 @@
+       "integrity": "sha1-khi5srkoojixPcT7a21XbyMUU+o=",
+       "dev": true
+     },
++    "inflection": {
++      "version": "1.12.0",
++      "resolved": "https://registry.npmjs.org/inflection/-/inflection-1.12.0.tgz",
++      "integrity": "sha1-ogCTVlbW9fa8TcdQLhrstwMihBY="
++    },
+     "inflight": {
+       "version": "1.0.6",
+       "resolved": "https://registry.npmjs.org/inflight/-/inflight-1.0.6.tgz",
+@@ -1170,15 +1239,20 @@
+         "binary-extensions": "^2.0.0"
+       }
+     },
++    "is-bluebird": {
++      "version": "1.0.2",
++      "resolved": "https://registry.npmjs.org/is-bluebird/-/is-bluebird-1.0.2.tgz",
++      "integrity": "sha1-CWQ5Bg9KpBGr7hkUOoTWpVNG1uI="
++    },
+     "is-buffer": {
+       "version": "2.0.4",
+       "resolved": "https://registry.npmjs.org/is-buffer/-/is-buffer-2.0.4.tgz",
+       "integrity": "sha512-Kq1rokWXOPXWuaMAqZiJW4XxsmD9zGx9q4aePabbn3qCRGedtH7Cm+zV8WETitMfu1wdh+Rvd6w5egwSngUX2A=="
+     },
+     "is-callable": {
+-      "version": "1.2.0",
+-      "resolved": "https://registry.npmjs.org/is-callable/-/is-callable-1.2.0.tgz",
+-      "integrity": "sha512-pyVD9AaGLxtg6srb2Ng6ynWJqkHU9bEM087AKck0w8QwDarTfNcpIYoU8x8Hv2Icm8u6kFJM18Dag8lyqGkviw=="
++      "version": "1.2.1",
++      "resolved": "https://registry.npmjs.org/is-callable/-/is-callable-1.2.1.tgz",
++      "integrity": "sha512-wliAfSzx6V+6WfMOmus1xy0XvSgf/dlStkvTfq7F0g4bOIW0PSUbnyse3NhDwdyYS1ozfUtAAySqTws3z9Eqgg=="
+     },
+     "is-ci": {
+       "version": "2.0.0",
+@@ -1264,6 +1338,11 @@
+       "resolved": "https://registry.npmjs.org/is-plain-obj/-/is-plain-obj-1.1.0.tgz",
+       "integrity": "sha1-caUMhCnfync8kqOQpKA7OfzVHT4="
+     },
++    "is-property": {
++      "version": "1.0.2",
++      "resolved": "https://registry.npmjs.org/is-property/-/is-property-1.0.2.tgz",
++      "integrity": "sha1-V/4cTkhHTt1lsJkR8msc1Ald2oQ="
++    },
+     "is-regex": {
+       "version": "1.1.1",
+       "resolved": "https://registry.npmjs.org/is-regex/-/is-regex-1.1.1.tgz",
+@@ -1327,9 +1406,9 @@
+       }
+     },
+     "js-yaml": {
+-      "version": "3.13.1",
+-      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-3.13.1.tgz",
+-      "integrity": "sha512-YfbcO7jXDdyj0DGxYVSlSeQNHbD7XPWvrVWeVUujrQEoZzWJIRrCPoyk6kL6IAjAG2IolMK4T0hNUe0HOUs5Jw==",
++      "version": "3.14.0",
++      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-3.14.0.tgz",
++      "integrity": "sha512-/4IbIeHcD9VMHFqDR/gQ7EdZdLimOvW2DdcxFjdyyZ9NsbS+ccrXqVWDtab/lRl5AlUqmpBx8EhPaWR+OtY17A==",
+       "requires": {
+         "argparse": "^1.0.7",
+         "esprima": "^4.0.0"
+@@ -1360,27 +1439,45 @@
+       }
+     },
+     "locate-path": {
+-      "version": "5.0.0",
+-      "resolved": "https://registry.npmjs.org/locate-path/-/locate-path-5.0.0.tgz",
+-      "integrity": "sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g==",
++      "version": "6.0.0",
++      "resolved": "https://registry.npmjs.org/locate-path/-/locate-path-6.0.0.tgz",
++      "integrity": "sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==",
+       "requires": {
+-        "p-locate": "^4.1.0"
++        "p-locate": "^5.0.0"
+       }
+     },
++    "lodash": {
++      "version": "4.17.20",
++      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.20.tgz",
++      "integrity": "sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA=="
++    },
+     "log-symbols": {
+-      "version": "3.0.0",
+-      "resolved": "https://registry.npmjs.org/log-symbols/-/log-symbols-3.0.0.tgz",
+-      "integrity": "sha512-dSkNGuI7iG3mfvDzUuYZyvk5dD9ocYCYzNU6CYDE6+Xqd+gwme6Z00NS3dUh8mq/73HaEtT7m6W+yUPtU6BZnQ==",
++      "version": "4.0.0",
++      "resolved": "https://registry.npmjs.org/log-symbols/-/log-symbols-4.0.0.tgz",
++      "integrity": "sha512-FN8JBzLx6CzeMrB0tg6pqlGU1wCrXW+ZXGH481kfsBqer0hToTIiHdjH4Mq8xJUbvATujKCvaREGWpGUionraA==",
+       "requires": {
+-        "chalk": "^2.4.2"
++        "chalk": "^4.0.0"
+       }
+     },
++    "long": {
++      "version": "4.0.0",
++      "resolved": "https://registry.npmjs.org/long/-/long-4.0.0.tgz",
++      "integrity": "sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA=="
++    },
+     "lowercase-keys": {
+       "version": "1.0.1",
+       "resolved": "https://registry.npmjs.org/lowercase-keys/-/lowercase-keys-1.0.1.tgz",
+       "integrity": "sha512-G2Lj61tXDnVFFOi8VZds+SoQjtQC3dgokKdDG2mTm1tx4m50NUHBOZSBwQQHyy0V12A0JTG4icfZQH+xPyh8VA==",
+       "dev": true
+     },
++    "lru-cache": {
++      "version": "5.1.1",
++      "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-5.1.1.tgz",
++      "integrity": "sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==",
++      "requires": {
++        "yallist": "^3.0.2"
++      }
++    },
+     "make-dir": {
+       "version": "3.1.0",
+       "resolved": "https://registry.npmjs.org/make-dir/-/make-dir-3.1.0.tgz",
+@@ -1458,22 +1555,22 @@
+       "dev": true
+     },
+     "mocha": {
+-      "version": "8.1.1",
+-      "resolved": "https://registry.npmjs.org/mocha/-/mocha-8.1.1.tgz",
+-      "integrity": "sha512-p7FuGlYH8t7gaiodlFreseLxEmxTgvyG9RgPHODFPySNhwUehu8NIb0vdSt3WFckSneswZ0Un5typYcWElk7HQ==",
++      "version": "8.1.3",
++      "resolved": "https://registry.npmjs.org/mocha/-/mocha-8.1.3.tgz",
++      "integrity": "sha512-ZbaYib4hT4PpF4bdSO2DohooKXIn4lDeiYqB+vTmCdr6l2woW0b6H3pf5x4sM5nwQMru9RvjjHYWVGltR50ZBw==",
+       "requires": {
+         "ansi-colors": "4.1.1",
+         "browser-stdout": "1.3.1",
+-        "chokidar": "3.3.1",
+-        "debug": "3.2.6",
++        "chokidar": "3.4.2",
++        "debug": "4.1.1",
+         "diff": "4.0.2",
+-        "escape-string-regexp": "1.0.5",
+-        "find-up": "4.1.0",
++        "escape-string-regexp": "4.0.0",
++        "find-up": "5.0.0",
+         "glob": "7.1.6",
+         "growl": "1.10.5",
+         "he": "1.2.0",
+-        "js-yaml": "3.13.1",
+-        "log-symbols": "3.0.0",
++        "js-yaml": "3.14.0",
++        "log-symbols": "4.0.0",
+         "minimatch": "3.0.4",
+         "ms": "2.1.2",
+         "object.assign": "4.1.0",
+@@ -1489,25 +1586,10 @@
+         "yargs-unparser": "1.6.1"
+       },
+       "dependencies": {
+-        "chokidar": {
+-          "version": "3.3.1",
+-          "resolved": "https://registry.npmjs.org/chokidar/-/chokidar-3.3.1.tgz",
+-          "integrity": "sha512-4QYCEWOcK3OJrxwvyyAOxFuhpvOVCYkr33LPfFNBjAD/w3sEzWsp2BUOkI4l9bHvWioAd0rc6NlHUOEaWkTeqg==",
+-          "requires": {
+-            "anymatch": "~3.1.1",
+-            "braces": "~3.0.2",
+-            "fsevents": "~2.1.2",
+-            "glob-parent": "~5.1.0",
+-            "is-binary-path": "~2.1.0",
+-            "is-glob": "~4.0.1",
+-            "normalize-path": "~3.0.0",
+-            "readdirp": "~3.3.0"
+-          }
+-        },
+         "debug": {
+-          "version": "3.2.6",
+-          "resolved": "https://registry.npmjs.org/debug/-/debug-3.2.6.tgz",
+-          "integrity": "sha512-mel+jf7nrtEl5Pn1Qx46zARXKDpBbvzezse7p7LqINmdoIk8PYP5SySaxEmYv6TZ0JyEKA1hsCId6DIhgITtWQ==",
++          "version": "4.1.1",
++          "resolved": "https://registry.npmjs.org/debug/-/debug-4.1.1.tgz",
++          "integrity": "sha512-pYAIzeRo8J6KPEaJ0VWOh5Pzkbw/RetuzehGM7QRRX5he4fPHx2rdKMB256ehJCkX+XRQm16eZLqLNS8RSZXZw==",
+           "requires": {
+             "ms": "^2.1.1"
+           }
+@@ -1522,14 +1604,6 @@
+           "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.2.tgz",
+           "integrity": "sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w=="
+         },
+-        "readdirp": {
+-          "version": "3.3.0",
+-          "resolved": "https://registry.npmjs.org/readdirp/-/readdirp-3.3.0.tgz",
+-          "integrity": "sha512-zz0pAkSPOXXm1viEwygWIPSPkcBYjW1xU5j/JBh5t9bGCJwa6f9+BJa6VaB2g+b55yVrmXzqkyLf4xaWYM0IkQ==",
+-          "requires": {
+-            "picomatch": "^2.0.7"
+-          }
+-        },
+         "strip-json-comments": {
+           "version": "3.0.1",
+           "resolved": "https://registry.npmjs.org/strip-json-comments/-/strip-json-comments-3.0.1.tgz",
+@@ -1545,11 +1619,74 @@
+         }
+       }
+     },
++    "moment": {
++      "version": "2.27.0",
++      "resolved": "https://registry.npmjs.org/moment/-/moment-2.27.0.tgz",
++      "integrity": "sha512-al0MUK7cpIcglMv3YF13qSgdAIqxHTO7brRtaz3DlSULbqfazqkc5kEjNrLDOM7fsjshoFIihnU8snrP7zUvhQ=="
++    },
++    "moment-timezone": {
++      "version": "0.5.31",
++      "resolved": "https://registry.npmjs.org/moment-timezone/-/moment-timezone-0.5.31.tgz",
++      "integrity": "sha512-+GgHNg8xRhMXfEbv81iDtrVeTcWt0kWmTEY1XQK14dICTXnWJnT0dxdlPspwqF3keKMVPXwayEsk1DI0AA/jdA==",
++      "requires": {
++        "moment": ">= 2.9.0"
++      }
++    },
+     "ms": {
+       "version": "2.0.0",
+       "resolved": "https://registry.npmjs.org/ms/-/ms-2.0.0.tgz",
+       "integrity": "sha1-VgiurfwAvmwpAd9fmGF4jeDVl8g="
+     },
++    "mysql2": {
++      "version": "2.1.0",
++      "resolved": "https://registry.npmjs.org/mysql2/-/mysql2-2.1.0.tgz",
++      "integrity": "sha512-9kGVyi930rG2KaHrz3sHwtc6K+GY9d8wWk1XRSYxQiunvGcn4DwuZxOwmK11ftuhhwrYDwGx9Ta4VBwznJn36A==",
++      "requires": {
++        "cardinal": "^2.1.1",
++        "denque": "^1.4.1",
++        "generate-function": "^2.3.1",
++        "iconv-lite": "^0.5.0",
++        "long": "^4.0.0",
++        "lru-cache": "^5.1.1",
++        "named-placeholders": "^1.1.2",
++        "seq-queue": "^0.0.5",
++        "sqlstring": "^2.3.1"
++      },
++      "dependencies": {
++        "iconv-lite": {
++          "version": "0.5.2",
++          "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.5.2.tgz",
++          "integrity": "sha512-kERHXvpSaB4aU3eANwidg79K8FlrN77m8G9V+0vOR3HYaRifrlwMEpT7ZBJqLSEIHnEgJTHcWK82wwLwwKwtag==",
++          "requires": {
++            "safer-buffer": ">= 2.1.2 < 3"
++          }
++        }
++      }
++    },
++    "named-placeholders": {
++      "version": "1.1.2",
++      "resolved": "https://registry.npmjs.org/named-placeholders/-/named-placeholders-1.1.2.tgz",
++      "integrity": "sha512-wiFWqxoLL3PGVReSZpjLVxyJ1bRqe+KKJVbr4hGs1KWfTZTQyezHFBbuKj9hsizHyGV2ne7EMjHdxEGAybD5SA==",
++      "requires": {
++        "lru-cache": "^4.1.3"
++      },
++      "dependencies": {
++        "lru-cache": {
++          "version": "4.1.5",
++          "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-4.1.5.tgz",
++          "integrity": "sha512-sWZlbEP2OsHNkXrMl5GYk/jKk70MBng6UU4YI/qGDYbgf6YbP4EvmqISbXCoJiRKs+1bSpFHVgQxvJ17F2li5g==",
++          "requires": {
++            "pseudomap": "^1.0.2",
++            "yallist": "^2.1.2"
++          }
++        },
++        "yallist": {
++          "version": "2.1.2",
++          "resolved": "https://registry.npmjs.org/yallist/-/yallist-2.1.2.tgz",
++          "integrity": "sha1-HBH5IY8HYImkfdUS+TxmmaaoHVI="
++        }
++      }
++    },
+     "negotiator": {
+       "version": "0.6.2",
+       "resolved": "https://registry.npmjs.org/negotiator/-/negotiator-0.6.2.tgz",
+@@ -1599,11 +1736,6 @@
+         "abbrev": "1"
+       }
+     },
+-    "normalize-path": {
+-      "version": "3.0.0",
+-      "resolved": "https://registry.npmjs.org/normalize-path/-/normalize-path-3.0.0.tgz",
+-      "integrity": "sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA=="
+-    },
+     "normalize-url": {
+       "version": "4.5.0",
+       "resolved": "https://registry.npmjs.org/normalize-url/-/normalize-url-4.5.0.tgz",
+@@ -1659,19 +1791,19 @@
+       "dev": true
+     },
+     "p-limit": {
+-      "version": "2.3.0",
+-      "resolved": "https://registry.npmjs.org/p-limit/-/p-limit-2.3.0.tgz",
+-      "integrity": "sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==",
++      "version": "3.0.2",
++      "resolved": "https://registry.npmjs.org/p-limit/-/p-limit-3.0.2.tgz",
++      "integrity": "sha512-iwqZSOoWIW+Ew4kAGUlN16J4M7OB3ysMLSZtnhmqx7njIHFPlxWBX8xo3lVTyFVq6mI/lL9qt2IsN1sHwaxJkg==",
+       "requires": {
+         "p-try": "^2.0.0"
+       }
+     },
+     "p-locate": {
+-      "version": "4.1.0",
+-      "resolved": "https://registry.npmjs.org/p-locate/-/p-locate-4.1.0.tgz",
+-      "integrity": "sha512-R79ZZ/0wAxKGu3oYMlz8jy/kbhsNrS7SKZ7PxEHBgJ5+F2mtFW2fK2cOtBh1cHYkQsbzFV7I+EoRKe6Yt0oK7A==",
++      "version": "5.0.0",
++      "resolved": "https://registry.npmjs.org/p-locate/-/p-locate-5.0.0.tgz",
++      "integrity": "sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==",
+       "requires": {
+-        "p-limit": "^2.2.0"
++        "p-limit": "^3.0.2"
+       }
+     },
+     "p-try": {
+@@ -1761,6 +1893,11 @@
+         "ipaddr.js": "1.9.1"
+       }
+     },
++    "pseudomap": {
++      "version": "1.0.2",
++      "resolved": "https://registry.npmjs.org/pseudomap/-/pseudomap-1.0.2.tgz",
++      "integrity": "sha1-8FKijacOYYkX7wqKw0wa5aaChrM="
++    },
+     "pstree.remy": {
+       "version": "1.1.8",
+       "resolved": "https://registry.npmjs.org/pstree.remy/-/pstree.remy-1.1.8.tgz",
+@@ -1845,11 +1982,23 @@
+       "version": "3.4.0",
+       "resolved": "https://registry.npmjs.org/readdirp/-/readdirp-3.4.0.tgz",
+       "integrity": "sha512-0xe001vZBnJEK+uKcj8qOhyAKPzIT+gStxWr3LCB0DwcXR5NZJ3IaC+yGnHCYzB/S7ov3m3EEbZI2zeNvX+hGQ==",
+-      "dev": true,
+       "requires": {
+         "picomatch": "^2.2.1"
+       }
+     },
++    "redeyed": {
++      "version": "2.1.1",
++      "resolved": "https://registry.npmjs.org/redeyed/-/redeyed-2.1.1.tgz",
++      "integrity": "sha1-iYS1gV2ZyyIEacme7v/jiRPmzAs=",
++      "requires": {
++        "esprima": "~4.0.0"
++      }
++    },
++    "reflect-metadata": {
++      "version": "0.1.13",
++      "resolved": "https://registry.npmjs.org/reflect-metadata/-/reflect-metadata-0.1.13.tgz",
++      "integrity": "sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg=="
++    },
+     "registry-auth-token": {
+       "version": "4.2.0",
+       "resolved": "https://registry.npmjs.org/registry-auth-token/-/registry-auth-token-4.2.0.tgz",
+@@ -1887,6 +2036,14 @@
+         "lowercase-keys": "^1.0.0"
+       }
+     },
++    "retry-as-promised": {
++      "version": "3.2.0",
++      "resolved": "https://registry.npmjs.org/retry-as-promised/-/retry-as-promised-3.2.0.tgz",
++      "integrity": "sha512-CybGs60B7oYU/qSQ6kuaFmRd9sTZ6oXSc0toqePvV74Ac6/IFZSI1ReFQmtCN+uvW1Mtqdwpvt/LGOiCBAY2Mg==",
++      "requires": {
++        "any-promise": "^1.3.0"
++      }
++    },
+     "safe-buffer": {
+       "version": "5.1.2",
+       "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
+@@ -1947,6 +2104,81 @@
+         }
+       }
+     },
++    "seq-queue": {
++      "version": "0.0.5",
++      "resolved": "https://registry.npmjs.org/seq-queue/-/seq-queue-0.0.5.tgz",
++      "integrity": "sha1-1WgS4cAXpuTnw+Ojeh2m143TyT4="
++    },
++    "sequelize": {
++      "version": "5.21.10",
++      "resolved": "https://registry.npmjs.org/sequelize/-/sequelize-5.21.10.tgz",
++      "integrity": "sha512-qni5lKIa4wBdbi3KQYj20R5TC0/a88qi/1XhGDzDvTaWxhx4gEpLr6aGwvfbvVD7XCilvOgjoBkBB0fLVpwNsw==",
++      "requires": {
++        "bluebird": "^3.5.0",
++        "cls-bluebird": "^2.1.0",
++        "debug": "^4.1.1",
++        "dottie": "^2.0.0",
++        "inflection": "1.12.0",
++        "lodash": "^4.17.15",
++        "moment": "^2.24.0",
++        "moment-timezone": "^0.5.21",
++        "retry-as-promised": "^3.2.0",
++        "semver": "^6.3.0",
++        "sequelize-pool": "^2.3.0",
++        "toposort-class": "^1.0.1",
++        "uuid": "^3.3.3",
++        "validator": "^10.11.0",
++        "wkx": "^0.4.8"
++      },
++      "dependencies": {
++        "debug": {
++          "version": "4.1.1",
++          "resolved": "https://registry.npmjs.org/debug/-/debug-4.1.1.tgz",
++          "integrity": "sha512-pYAIzeRo8J6KPEaJ0VWOh5Pzkbw/RetuzehGM7QRRX5he4fPHx2rdKMB256ehJCkX+XRQm16eZLqLNS8RSZXZw==",
++          "requires": {
++            "ms": "^2.1.1"
++          }
++        },
++        "ms": {
++          "version": "2.1.2",
++          "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.2.tgz",
++          "integrity": "sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w=="
++        },
++        "semver": {
++          "version": "6.3.0",
++          "resolved": "https://registry.npmjs.org/semver/-/semver-6.3.0.tgz",
++          "integrity": "sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw=="
++        }
++      }
++    },
++    "sequelize-pool": {
++      "version": "2.3.0",
++      "resolved": "https://registry.npmjs.org/sequelize-pool/-/sequelize-pool-2.3.0.tgz",
++      "integrity": "sha512-Ibz08vnXvkZ8LJTiUOxRcj1Ckdn7qafNZ2t59jYHMX1VIebTAOYefWdRYFt6z6+hy52WGthAHAoLc9hvk3onqA=="
++    },
++    "sequelize-typescript": {
++      "version": "1.1.0",
++      "resolved": "https://registry.npmjs.org/sequelize-typescript/-/sequelize-typescript-1.1.0.tgz",
++      "integrity": "sha512-FAPEQPeAhIaFQNLAcf9Q2IWcqWhNcvn5OZZ7BzGB0CJMtImIsGg4E/EAb7huMmPaPwDArxJUWGqk1KurphTNRA==",
++      "requires": {
++        "glob": "7.1.2"
++      },
++      "dependencies": {
++        "glob": {
++          "version": "7.1.2",
++          "resolved": "https://registry.npmjs.org/glob/-/glob-7.1.2.tgz",
++          "integrity": "sha512-MJTUg1kjuLeQCJ+ccE4Vpa6kKVXkPYJ2mOCQyUuKLcLQsdrMCpBPUi8qVE6+YuaJkozeA9NusTAw3hLr8Xe5EQ==",
++          "requires": {
++            "fs.realpath": "^1.0.0",
++            "inflight": "^1.0.4",
++            "inherits": "2",
++            "minimatch": "^3.0.4",
++            "once": "^1.3.0",
++            "path-is-absolute": "^1.0.0"
++          }
++        }
++      }
++    },
+     "serialize-javascript": {
+       "version": "4.0.0",
+       "resolved": "https://registry.npmjs.org/serialize-javascript/-/serialize-javascript-4.0.0.tgz",
+@@ -1976,6 +2208,11 @@
+       "resolved": "https://registry.npmjs.org/setprototypeof/-/setprototypeof-1.1.1.tgz",
+       "integrity": "sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw=="
+     },
++    "shimmer": {
++      "version": "1.2.1",
++      "resolved": "https://registry.npmjs.org/shimmer/-/shimmer-1.2.1.tgz",
++      "integrity": "sha512-sQTKC1Re/rM6XyFM6fIAGHRPVGvyXfgzIDvzoq608vM+jeyVD0Tu1E6Np0Kc2zAIFWIj963V2800iF/9LPieQw=="
++    },
+     "signal-exit": {
+       "version": "3.0.3",
+       "resolved": "https://registry.npmjs.org/signal-exit/-/signal-exit-3.0.3.tgz",
+@@ -2005,6 +2242,11 @@
+       "resolved": "https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz",
+       "integrity": "sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw="
+     },
++    "sqlstring": {
++      "version": "2.3.2",
++      "resolved": "https://registry.npmjs.org/sqlstring/-/sqlstring-2.3.2.tgz",
++      "integrity": "sha512-vF4ZbYdKS8OnoJAWBmMxCQDkiEBkGQYU7UZPtL8flbDRSNkhaXvRJ279ZtI6M+zDaQovVU4tuRgzK5fVhvFAhg=="
++    },
+     "statuses": {
+       "version": "1.5.0",
+       "resolved": "https://registry.npmjs.org/statuses/-/statuses-1.5.0.tgz",
+@@ -2098,6 +2340,7 @@
+       "version": "5.5.0",
+       "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-5.5.0.tgz",
+       "integrity": "sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow==",
++      "dev": true,
+       "requires": {
+         "has-flag": "^3.0.0"
+       }
+@@ -2127,6 +2370,11 @@
+       "resolved": "https://registry.npmjs.org/toidentifier/-/toidentifier-1.0.0.tgz",
+       "integrity": "sha512-yaOH/Pk/VEhBWWTlhI+qXxDFXlejDGcQipMlyxda9nthulaxLZUNcUqFxokp0vcYnvteJln5FNQDRrxj3YcbVw=="
+     },
++    "toposort-class": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/toposort-class/-/toposort-class-1.0.1.tgz",
++      "integrity": "sha1-f/0feMi+KMO6Rc1OGj9e4ZO9mYg="
++    },
+     "touch": {
+       "version": "3.1.0",
+       "resolved": "https://registry.npmjs.org/touch/-/touch-3.1.0.tgz",
+@@ -2299,6 +2547,16 @@
+       "resolved": "https://registry.npmjs.org/utils-merge/-/utils-merge-1.0.1.tgz",
+       "integrity": "sha1-n5VxD1CiZ5R7LMwSR0HBAoQn5xM="
+     },
++    "uuid": {
++      "version": "3.4.0",
++      "resolved": "https://registry.npmjs.org/uuid/-/uuid-3.4.0.tgz",
++      "integrity": "sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A=="
++    },
++    "validator": {
++      "version": "10.11.0",
++      "resolved": "https://registry.npmjs.org/validator/-/validator-10.11.0.tgz",
++      "integrity": "sha512-X/p3UZerAIsbBfN/IwahhYaBbY68EN/UQBWHtsbXGT5bfrH/p4NQzUCG1kF/rtKaNpnJ7jAu6NGTdSNtyNIXMw=="
++    },
+     "vary": {
+       "version": "1.1.2",
+       "resolved": "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz",
+@@ -2363,6 +2621,14 @@
+         "string-width": "^4.0.0"
+       }
+     },
++    "wkx": {
++      "version": "0.4.8",
++      "resolved": "https://registry.npmjs.org/wkx/-/wkx-0.4.8.tgz",
++      "integrity": "sha512-ikPXMM9IR/gy/LwiOSqWlSL3X/J5uk9EO2hHNRXS41eTLXaUFEVw9fn/593jW/tE5tedNg8YjT5HkCa4FqQZyQ==",
++      "requires": {
++        "@types/node": "*"
++      }
++    },
+     "workerpool": {
+       "version": "6.0.0",
+       "resolved": "https://registry.npmjs.org/workerpool/-/workerpool-6.0.0.tgz",
+@@ -2383,6 +2649,27 @@
+           "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-4.1.0.tgz",
+           "integrity": "sha512-1apePfXM1UOSqw0o9IiFAovVz9M5S1Dg+4TrDwfMewQ6p/rmMueb7tWZjQ1rx4Loy1ArBggoqGpfqqdI4rondg=="
+         },
++        "ansi-styles": {
++          "version": "3.2.1",
++          "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-3.2.1.tgz",
++          "integrity": "sha512-VT0ZI6kZRdTh8YyJw3SMbYm/u+NqfsAxEpWO0Pf9sq8/e94WxxOpPKx9FR1FlyCtOVDNOQ+8ntlqFxiRc+r5qA==",
++          "requires": {
++            "color-convert": "^1.9.0"
++          }
++        },
++        "color-convert": {
++          "version": "1.9.3",
++          "resolved": "https://registry.npmjs.org/color-convert/-/color-convert-1.9.3.tgz",
++          "integrity": "sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==",
++          "requires": {
++            "color-name": "1.1.3"
++          }
++        },
++        "color-name": {
++          "version": "1.1.3",
++          "resolved": "https://registry.npmjs.org/color-name/-/color-name-1.1.3.tgz",
++          "integrity": "sha1-p9BVi9icQveV3UIyj3QIMcpTvCU="
++        },
+         "emoji-regex": {
+           "version": "7.0.3",
+           "resolved": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-7.0.3.tgz",
+@@ -2441,6 +2728,11 @@
+       "resolved": "https://registry.npmjs.org/y18n/-/y18n-4.0.0.tgz",
+       "integrity": "sha512-r9S/ZyXu/Xu9q1tYlpsLIsa3EeLXXk0VwlxqTcFRfg9EhMW+17kbt9G0NrgCmhGb5vT2hyhJZLfDGx+7+5Uj/w=="
+     },
++    "yallist": {
++      "version": "3.1.1",
++      "resolved": "https://registry.npmjs.org/yallist/-/yallist-3.1.1.tgz",
++      "integrity": "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g=="
++    },
+     "yargs": {
+       "version": "13.3.2",
+       "resolved": "https://registry.npmjs.org/yargs/-/yargs-13.3.2.tgz",
+@@ -2490,6 +2782,14 @@
+             "path-exists": "^3.0.0"
+           }
+         },
++        "p-limit": {
++          "version": "2.3.0",
++          "resolved": "https://registry.npmjs.org/p-limit/-/p-limit-2.3.0.tgz",
++          "integrity": "sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==",
++          "requires": {
++            "p-try": "^2.0.0"
++          }
++        },
+         "p-locate": {
+           "version": "3.0.0",
+           "resolved": "https://registry.npmjs.org/p-locate/-/p-locate-3.0.0.tgz",
+@@ -2576,6 +2876,14 @@
+             "path-exists": "^3.0.0"
+           }
+         },
++        "p-limit": {
++          "version": "2.3.0",
++          "resolved": "https://registry.npmjs.org/p-limit/-/p-limit-2.3.0.tgz",
++          "integrity": "sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==",
++          "requires": {
++            "p-try": "^2.0.0"
++          }
++        },
+         "p-locate": {
+           "version": "3.0.0",
+           "resolved": "https://registry.npmjs.org/p-locate/-/p-locate-3.0.0.tgz",
+diff --git a/api/package.json b/api/package.json
+index 69d1937..7310d20 100644
+--- a/api/package.json
++++ b/api/package.json
+@@ -11,11 +11,16 @@
+   "author": "Jonathan Gill<jonathan@adludio.com>",
+   "license": "ISC",
+   "dependencies": {
++    "body-parser": "^1.19.0",
+     "chai": "^4.2.0",
+     "chai-http": "^4.3.0",
+     "cors": "^2.8.5",
+     "express": "^4.17.1",
+-    "mocha": "^8.1.1"
++    "mocha": "^8.1.1",
++    "mysql2": "^2.1.0",
++    "reflect-metadata": "^0.1.13",
++    "sequelize": "5.21.10",
++    "sequelize-typescript": "^1.1.0"
+   },
+   "devDependencies": {
+     "@types/cors": "^2.8.7",
+diff --git a/api/src/controllers/index.controller.ts b/api/src/controllers/index.controller.ts
+new file mode 100644
+index 0000000..7d409dc
+--- /dev/null
++++ b/api/src/controllers/index.controller.ts
+@@ -0,0 +1,5 @@
++import { Request, Response } from 'express';
++
++export function WelcomeApi (req: Request, res: Response): Response {
++  return res.json("Welcome to api");
++}
+\ No newline at end of file
+diff --git a/api/src/controllers/order.controller.ts b/api/src/controllers/order.controller.ts
+new file mode 100644
+index 0000000..986c274
+--- /dev/null
++++ b/api/src/controllers/order.controller.ts
+@@ -0,0 +1,27 @@
++import { Request, Response } from 'express';
++import Order from "../models/orders";
++
++import {IOrder} from '../models/orders'
++
++export async function OrderApi (req: Request, res: Response): Promise<Response> {
++  const order = await Order.findAll()
++  return res.json(order);
++}
++
++export async function createOrder (req: Request, res: Response): Promise<Response> {
++  const newOrder: IOrder = req.body;
++  const order = await Order.create(newOrder)
++  return res.json(order)
++}
++
++export async function getOrder (req: Request, res: Response): Promise<Response> {
++  const id = req.params.orderId;
++  const order = await Order.findOne({ where: { id: id } })
++  return res.json(order);
++}
++
++export async function updateOrder (req: Request, res: Response): Promise<Response> {
++  const id = req.params.orderId;
++  const order = Order.update(req.body, { where: { id: id } })
++  return res.json(order);
++}
+\ No newline at end of file
+diff --git a/api/src/database.ts b/api/src/database.ts
+new file mode 100644
+index 0000000..bfb4347
+--- /dev/null
++++ b/api/src/database.ts
+@@ -0,0 +1,7 @@
++import { Sequelize } from "sequelize-typescript";
++
++export const sequelize = new Sequelize('adfoodio', 'root', 'root', {
++   host: 'mysql',
++   dialect: 'mysql',
++   models: [__dirname + '/models']
++ })
+\ No newline at end of file
+diff --git a/api/src/models/orders.ts b/api/src/models/orders.ts
+new file mode 100644
+index 0000000..1fafe3a
+--- /dev/null
++++ b/api/src/models/orders.ts
+@@ -0,0 +1,38 @@
++import { Model, AllowNull, AutoIncrement, Column, NotEmpty, PrimaryKey, Table } from 'sequelize-typescript';
++
++export interface IOrder {
++  id: number,
++  order: string,
++  price: number,
++  completed: boolean
++}
++
++@Table (
++  {
++    tableName: "order",
++    timestamps: true
++  }
++)
++
++export default class Order extends Model implements IOrder {
++
++  @AutoIncrement
++  @PrimaryKey
++  @Column
++  id!: number
++
++  @AllowNull(false)
++  @NotEmpty
++  @Column
++  order!: string
++
++  @AllowNull(false)
++  @NotEmpty
++  @Column
++  price!: number
++
++  @AllowNull(false)
++  @NotEmpty
++  @Column
++  completed!: boolean
++}
+\ No newline at end of file
+diff --git a/api/src/routes/index.routes.ts b/api/src/routes/index.routes.ts
+new file mode 100644
+index 0000000..c2743bc
+--- /dev/null
++++ b/api/src/routes/index.routes.ts
+@@ -0,0 +1,11 @@
++import { Router } from 'express';
++
++//Import Routes
++import { WelcomeApi } from '../controllers/index.controller';
++
++const router = Router();
++
++router.route("/")
++  .get(WelcomeApi)
++
++export default router
+\ No newline at end of file
+diff --git a/api/src/routes/order.routes.ts b/api/src/routes/order.routes.ts
+new file mode 100644
+index 0000000..7fb4990
+--- /dev/null
++++ b/api/src/routes/order.routes.ts
+@@ -0,0 +1,16 @@
++import { Router } from 'express';
++
++//Import Routes
++import { OrderApi, createOrder, getOrder, updateOrder } from '../controllers/order.controller';
++
++const router = Router();
++
++router.route("/")
++  .get(OrderApi)
++  .post(createOrder)
++
++router.route("/:orderId")
++  .get(getOrder)
++  .put(updateOrder)
++
++export default router
+\ No newline at end of file
+diff --git a/api/src/server.ts b/api/src/server.ts
+index b4b291c..690a21f 100644
+--- a/api/src/server.ts
++++ b/api/src/server.ts
+@@ -1,17 +1,39 @@
+ import express from "express";
++import bodyParser from 'body-parser';
++import cors from 'cors';
++import { sequelize } from './database';
++import IndexRoute from './routes/index.routes';
++import OrderRoute from './routes/order.routes';
+ 
+ const port = process.env.NODE_PORT || 4848;
+ 
+ export function run () {
+   const app = express();
++  const corsOptions = {
++    origin: '*'
++  }
+ 
+-  app.get("/", function(_, res) {
+-    res.type('text/plain').send("Food can be served");
+-  });
++  app.use(bodyParser.json())
++  app.use(bodyParser.urlencoded({extended: true}))
++
++  app.use("/api", cors(corsOptions), IndexRoute);
++  app.use("/api/order", cors(corsOptions), OrderRoute);
+ 
+   return app.listen(port, function () {
+     // Port is forwarded by docker to 80.
+     console.log(`Listening on http://localhost:${port}`);
++
++    sequelize.authenticate().then(async() => {
++      console.log("database connected")
++      try {
++          await sequelize.sync({force: true})
++      } catch (error) {
++          console.log(error.message)
++      }
++
++    }).catch( (e: any) => {
++        console.log(e.message)
++    })
+   })
+ }
+ 
+diff --git a/api/tsconfig.json b/api/tsconfig.json
+index ca86aa0..1b54873 100644
+--- a/api/tsconfig.json
++++ b/api/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+   "include": [
+     "src",
+-    "config"
++    "src/config"
+   ],
+   "exclude": [
+     "coverage"
+@@ -30,10 +30,12 @@
+     "strictNullChecks": true,
+     "noImplicitAny": true,
+     "rootDirs": ["src"],
++    "emitDecoratorMetadata":true,
++    "experimentalDecorators":true,
+     /* Module Resolution Options */
+     "moduleResolution": "node", /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
+     "esModuleInterop": true,
+     // "baseUrl": "./",                       /* Base directory to resolve non-absolute module names. */
+-    // "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */ 
++    // "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+   }
+-}
++}
+\ No newline at end of file
+diff --git a/docker-compose.yml b/docker-compose.yml
+index e509eb4..3eba400 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -1,21 +1,21 @@
+ version: "3.7"
+ 
+-services: 
++services:
+ 
+   api:
+-    build: 
++    build:
+       context: ./api
+     command: npm run start:watch
+-    links: 
++    links:
+       - nginx:api.adfoodio.site
+-      - redis  
++      - redis
+       - mysql
+     environment:
+       - VIRTUAL_HOST=api.adfoodio.site
+       - VIRTUAL_PORT=4848
+-    volumes: 
++    volumes:
+       - ./api:/api
+-    logging: 
++    logging:
+       driver: "json-file"
+       options:
+         max-size: "200k"
+@@ -65,4 +65,4 @@ services:
+       - MYSQL_PASSWORD=root
+       - MYSQL_USER=root
+       - MYSQL_DATABASE=adfoodio
+-    restart: unless-stopped
++    restart: unless-stopped
+\ No newline at end of file
+diff --git a/frontend/package-lock.json b/frontend/package-lock.json
+index 09ee73b..001e9fb 100644
+--- a/frontend/package-lock.json
++++ b/frontend/package-lock.json
+@@ -1173,6 +1173,11 @@
+       "resolved": "https://registry.npmjs.org/@csstools/normalize.css/-/normalize.css-10.1.0.tgz",
+       "integrity": "sha512-ij4wRiunFfaJxjB0BdrYHIH8FxBJpOwNPhhAcunlmPdXudL1WQV1qoP9un6JsEBAgQH+7UXyyjh0g7jTxXK6tg=="
+     },
++    "@emotion/hash": {
++      "version": "0.8.0",
++      "resolved": "https://registry.npmjs.org/@emotion/hash/-/hash-0.8.0.tgz",
++      "integrity": "sha512-kBJtf7PH6aWwZ6fka3zQ0p6SBYzx4fl1LoZXE2RrnYST9Xljm7WfKJrU4g/Xr3Beg72MLrp1AWNUmuYJTL7Cow=="
++    },
+     "@hapi/address": {
+       "version": "2.1.4",
+       "resolved": "https://registry.npmjs.org/@hapi/address/-/address-2.1.4.tgz",
+@@ -1379,6 +1384,108 @@
+         "@types/yargs": "^13.0.0"
+       }
+     },
++    "@material-ui/core": {
++      "version": "4.11.0",
++      "resolved": "https://registry.npmjs.org/@material-ui/core/-/core-4.11.0.tgz",
++      "integrity": "sha512-bYo9uIub8wGhZySHqLQ833zi4ZML+XCBE1XwJ8EuUVSpTWWG57Pm+YugQToJNFsEyiKFhPh8DPD0bgupz8n01g==",
++      "requires": {
++        "@babel/runtime": "^7.4.4",
++        "@material-ui/styles": "^4.10.0",
++        "@material-ui/system": "^4.9.14",
++        "@material-ui/types": "^5.1.0",
++        "@material-ui/utils": "^4.10.2",
++        "@types/react-transition-group": "^4.2.0",
++        "clsx": "^1.0.4",
++        "hoist-non-react-statics": "^3.3.2",
++        "popper.js": "1.16.1-lts",
++        "prop-types": "^15.7.2",
++        "react-is": "^16.8.0",
++        "react-transition-group": "^4.4.0"
++      }
++    },
++    "@material-ui/icons": {
++      "version": "4.9.1",
++      "resolved": "https://registry.npmjs.org/@material-ui/icons/-/icons-4.9.1.tgz",
++      "integrity": "sha512-GBitL3oBWO0hzBhvA9KxqcowRUsA0qzwKkURyC8nppnC3fw54KPKZ+d4V1Eeg/UnDRSzDaI9nGCdel/eh9AQMg==",
++      "requires": {
++        "@babel/runtime": "^7.4.4"
++      }
++    },
++    "@material-ui/lab": {
++      "version": "4.0.0-alpha.56",
++      "resolved": "https://registry.npmjs.org/@material-ui/lab/-/lab-4.0.0-alpha.56.tgz",
++      "integrity": "sha512-xPlkK+z/6y/24ka4gVJgwPfoCF4RCh8dXb1BNE7MtF9bXEBLN/lBxNTK8VAa0qm3V2oinA6xtUIdcRh0aeRtVw==",
++      "requires": {
++        "@babel/runtime": "^7.4.4",
++        "@material-ui/utils": "^4.10.2",
++        "clsx": "^1.0.4",
++        "prop-types": "^15.7.2",
++        "react-is": "^16.8.0"
++      }
++    },
++    "@material-ui/styles": {
++      "version": "4.10.0",
++      "resolved": "https://registry.npmjs.org/@material-ui/styles/-/styles-4.10.0.tgz",
++      "integrity": "sha512-XPwiVTpd3rlnbfrgtEJ1eJJdFCXZkHxy8TrdieaTvwxNYj42VnnCyFzxYeNW9Lhj4V1oD8YtQ6S5Gie7bZDf7Q==",
++      "requires": {
++        "@babel/runtime": "^7.4.4",
++        "@emotion/hash": "^0.8.0",
++        "@material-ui/types": "^5.1.0",
++        "@material-ui/utils": "^4.9.6",
++        "clsx": "^1.0.4",
++        "csstype": "^2.5.2",
++        "hoist-non-react-statics": "^3.3.2",
++        "jss": "^10.0.3",
++        "jss-plugin-camel-case": "^10.0.3",
++        "jss-plugin-default-unit": "^10.0.3",
++        "jss-plugin-global": "^10.0.3",
++        "jss-plugin-nested": "^10.0.3",
++        "jss-plugin-props-sort": "^10.0.3",
++        "jss-plugin-rule-value-function": "^10.0.3",
++        "jss-plugin-vendor-prefixer": "^10.0.3",
++        "prop-types": "^15.7.2"
++      },
++      "dependencies": {
++        "csstype": {
++          "version": "2.6.13",
++          "resolved": "https://registry.npmjs.org/csstype/-/csstype-2.6.13.tgz",
++          "integrity": "sha512-ul26pfSQTZW8dcOnD2iiJssfXw0gdNVX9IJDH/X3K5DGPfj+fUYe3kB+swUY6BF3oZDxaID3AJt+9/ojSAE05A=="
++        }
++      }
++    },
++    "@material-ui/system": {
++      "version": "4.9.14",
++      "resolved": "https://registry.npmjs.org/@material-ui/system/-/system-4.9.14.tgz",
++      "integrity": "sha512-oQbaqfSnNlEkXEziDcJDDIy8pbvwUmZXWNqlmIwDqr/ZdCK8FuV3f4nxikUh7hvClKV2gnQ9djh5CZFTHkZj3w==",
++      "requires": {
++        "@babel/runtime": "^7.4.4",
++        "@material-ui/utils": "^4.9.6",
++        "csstype": "^2.5.2",
++        "prop-types": "^15.7.2"
++      },
++      "dependencies": {
++        "csstype": {
++          "version": "2.6.13",
++          "resolved": "https://registry.npmjs.org/csstype/-/csstype-2.6.13.tgz",
++          "integrity": "sha512-ul26pfSQTZW8dcOnD2iiJssfXw0gdNVX9IJDH/X3K5DGPfj+fUYe3kB+swUY6BF3oZDxaID3AJt+9/ojSAE05A=="
++        }
++      }
++    },
++    "@material-ui/types": {
++      "version": "5.1.0",
++      "resolved": "https://registry.npmjs.org/@material-ui/types/-/types-5.1.0.tgz",
++      "integrity": "sha512-7cqRjrY50b8QzRSYyhSpx4WRw2YuO0KKIGQEVk5J8uoz2BanawykgZGoWEqKm7pVIbzFDN0SpPcVV4IhOFkl8A=="
++    },
++    "@material-ui/utils": {
++      "version": "4.10.2",
++      "resolved": "https://registry.npmjs.org/@material-ui/utils/-/utils-4.10.2.tgz",
++      "integrity": "sha512-eg29v74P7W5r6a4tWWDAAfZldXIzfyO1am2fIsC39hdUUHm/33k6pGOKPbgDjg/U/4ifmgAePy/1OjkKN6rFRw==",
++      "requires": {
++        "@babel/runtime": "^7.4.4",
++        "prop-types": "^15.7.2",
++        "react-is": "^16.8.0"
++      }
++    },
+     "@mrmlnc/readdir-enhanced": {
+       "version": "2.2.1",
+       "resolved": "https://registry.npmjs.org/@mrmlnc/readdir-enhanced/-/readdir-enhanced-2.2.1.tgz",
+@@ -1766,6 +1873,14 @@
+         "@types/react": "*"
+       }
+     },
++    "@types/react-transition-group": {
++      "version": "4.4.0",
++      "resolved": "https://registry.npmjs.org/@types/react-transition-group/-/react-transition-group-4.4.0.tgz",
++      "integrity": "sha512-/QfLHGpu+2fQOqQaXh8MG9q03bFENooTb/it4jr5kKaZlDQfWvjqWZg48AwzPVMBHlRuTRAY7hRHCEOXz5kV6w==",
++      "requires": {
++        "@types/react": "*"
++      }
++    },
+     "@types/stack-utils": {
+       "version": "1.0.1",
+       "resolved": "https://registry.npmjs.org/@types/stack-utils/-/stack-utils-1.0.1.tgz",
+@@ -2232,6 +2347,11 @@
+       "resolved": "https://registry.npmjs.org/alphanum-sort/-/alphanum-sort-1.0.2.tgz",
+       "integrity": "sha1-l6ERlkmyEa0zaR2fn0hqjsn74KM="
+     },
++    "amdefine": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/amdefine/-/amdefine-1.0.1.tgz",
++      "integrity": "sha1-SlKCrBZHKek2Gbz9OtFR+BfOkfU="
++    },
+     "ansi-colors": {
+       "version": "3.2.4",
+       "resolved": "https://registry.npmjs.org/ansi-colors/-/ansi-colors-3.2.4.tgz",
+@@ -2422,6 +2542,11 @@
+       "resolved": "https://registry.npmjs.org/assign-symbols/-/assign-symbols-1.0.0.tgz",
+       "integrity": "sha1-WWZ/QfrdTyDMvCu5a41Pf3jsA2c="
+     },
++    "ast-types": {
++      "version": "0.9.6",
++      "resolved": "https://registry.npmjs.org/ast-types/-/ast-types-0.9.6.tgz",
++      "integrity": "sha1-ECyenpAF0+fjgpvwxPok7oYu6bk="
++    },
+     "ast-types-flow": {
+       "version": "0.0.7",
+       "resolved": "https://registry.npmjs.org/ast-types-flow/-/ast-types-flow-0.0.7.tgz",
+@@ -2956,6 +3081,11 @@
+         }
+       }
+     },
++    "base62": {
++      "version": "1.2.8",
++      "resolved": "https://registry.npmjs.org/base62/-/base62-1.2.8.tgz",
++      "integrity": "sha512-V6YHUbjLxN1ymqNLb1DPHoU1CpfdL7d2YTIp5W3U4hhoG4hhxNmsFDs66M9EXxBiSEke5Bt5dwdfMwwZF70iLA=="
++    },
+     "base64-js": {
+       "version": "1.3.1",
+       "resolved": "https://registry.npmjs.org/base64-js/-/base64-js-1.3.1.tgz",
+@@ -3394,6 +3524,11 @@
+         "supports-color": "^5.3.0"
+       }
+     },
++    "change-emitter": {
++      "version": "0.1.6",
++      "resolved": "https://registry.npmjs.org/change-emitter/-/change-emitter-0.1.6.tgz",
++      "integrity": "sha1-6LL+PX8at9aaMhma/5HqaTFAlRU="
++    },
+     "chardet": {
+       "version": "0.7.0",
+       "resolved": "https://registry.npmjs.org/chardet/-/chardet-0.7.0.tgz",
+@@ -3577,6 +3712,11 @@
+         "shallow-clone": "^0.1.2"
+       }
+     },
++    "clsx": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/clsx/-/clsx-1.1.1.tgz",
++      "integrity": "sha512-6/bPho624p3S2pMyvP5kKBPXnI3ufHLObBFCfgx+LkeR5lg2XYy2hqZqUf45ypD8COn2bhgGJSUE+l5dhNBieA=="
++    },
+     "co": {
+       "version": "4.6.0",
+       "resolved": "https://registry.npmjs.org/co/-/co-4.6.0.tgz",
+@@ -3660,6 +3800,36 @@
+       "resolved": "https://registry.npmjs.org/commondir/-/commondir-1.0.1.tgz",
+       "integrity": "sha1-3dgA2gxmEnOTzKWVDqloo6rxJTs="
+     },
++    "commoner": {
++      "version": "0.10.8",
++      "resolved": "https://registry.npmjs.org/commoner/-/commoner-0.10.8.tgz",
++      "integrity": "sha1-NPw2cs0kOT6LtH5wyqApOBH08sU=",
++      "requires": {
++        "commander": "^2.5.0",
++        "detective": "^4.3.1",
++        "glob": "^5.0.15",
++        "graceful-fs": "^4.1.2",
++        "iconv-lite": "^0.4.5",
++        "mkdirp": "^0.5.0",
++        "private": "^0.1.6",
++        "q": "^1.1.2",
++        "recast": "^0.11.17"
++      },
++      "dependencies": {
++        "glob": {
++          "version": "5.0.15",
++          "resolved": "https://registry.npmjs.org/glob/-/glob-5.0.15.tgz",
++          "integrity": "sha1-G8k2ueAvSmA/zCIuz3Yz0wuLk7E=",
++          "requires": {
++            "inflight": "^1.0.4",
++            "inherits": "2",
++            "minimatch": "2 || 3",
++            "once": "^1.3.0",
++            "path-is-absolute": "^1.0.0"
++          }
++        }
++      }
++    },
+     "component-emitter": {
+       "version": "1.3.0",
+       "resolved": "https://registry.npmjs.org/component-emitter/-/component-emitter-1.3.0.tgz",
+@@ -4062,6 +4232,15 @@
+         "source-map": "^0.6.1"
+       }
+     },
++    "css-vendor": {
++      "version": "2.0.8",
++      "resolved": "https://registry.npmjs.org/css-vendor/-/css-vendor-2.0.8.tgz",
++      "integrity": "sha512-x9Aq0XTInxrkuFeHKbYC7zWY8ai7qJ04Kxd9MnvbC1uO5DagxoHQjm4JvG+vCdXOoFtCjbL2XSZfxmoYa9uQVQ==",
++      "requires": {
++        "@babel/runtime": "^7.8.3",
++        "is-in-browser": "^1.0.2"
++      }
++    },
+     "css-what": {
+       "version": "3.3.0",
+       "resolved": "https://registry.npmjs.org/css-what/-/css-what-3.3.0.tgz",
+@@ -4339,6 +4518,11 @@
+         }
+       }
+     },
++    "defined": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/defined/-/defined-1.0.0.tgz",
++      "integrity": "sha1-yY2bzvdWdBiOEQlpFRGZ45sfppM="
++    },
+     "del": {
+       "version": "4.1.1",
+       "resolved": "https://registry.npmjs.org/del/-/del-4.1.1.tgz",
+@@ -4442,6 +4626,22 @@
+         }
+       }
+     },
++    "detective": {
++      "version": "4.7.1",
++      "resolved": "https://registry.npmjs.org/detective/-/detective-4.7.1.tgz",
++      "integrity": "sha512-H6PmeeUcZloWtdt4DAkFyzFL94arpHr3NOwwmVILFiy+9Qd4JTxxXrzfyGk/lmct2qVGBwTSwSXagqu2BxmWig==",
++      "requires": {
++        "acorn": "^5.2.1",
++        "defined": "^1.0.0"
++      },
++      "dependencies": {
++        "acorn": {
++          "version": "5.7.4",
++          "resolved": "https://registry.npmjs.org/acorn/-/acorn-5.7.4.tgz",
++          "integrity": "sha512-1D++VG7BhrtvQpNbBzovKNc1FLGGEE/oGe7b9xJm/RFHMBeUaUGpluV9RLjZa47YFdPcDAenEYuq9pQPcMdLJg=="
++        }
++      }
++    },
+     "diff-sequences": {
+       "version": "24.9.0",
+       "resolved": "https://registry.npmjs.org/diff-sequences/-/diff-sequences-24.9.0.tgz",
+@@ -4516,6 +4716,15 @@
+         "utila": "~0.4"
+       }
+     },
++    "dom-helpers": {
++      "version": "5.2.0",
++      "resolved": "https://registry.npmjs.org/dom-helpers/-/dom-helpers-5.2.0.tgz",
++      "integrity": "sha512-Ru5o9+V8CpunKnz5LGgWXkmrH/20cGKwcHwS4m73zIvs54CN9epEmT/HLqFJW3kXpakAFkEdzgy1hzlJe3E4OQ==",
++      "requires": {
++        "@babel/runtime": "^7.8.7",
++        "csstype": "^3.0.2"
++      }
++    },
+     "dom-serializer": {
+       "version": "0.2.2",
+       "resolved": "https://registry.npmjs.org/dom-serializer/-/dom-serializer-0.2.2.tgz",
+@@ -4689,6 +4898,24 @@
+       "resolved": "https://registry.npmjs.org/encodeurl/-/encodeurl-1.0.2.tgz",
+       "integrity": "sha1-rT/0yG7C0CkyL1oCw6mmBslbP1k="
+     },
++    "encoding": {
++      "version": "0.1.13",
++      "resolved": "https://registry.npmjs.org/encoding/-/encoding-0.1.13.tgz",
++      "integrity": "sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==",
++      "requires": {
++        "iconv-lite": "^0.6.2"
++      },
++      "dependencies": {
++        "iconv-lite": {
++          "version": "0.6.2",
++          "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.6.2.tgz",
++          "integrity": "sha512-2y91h5OpQlolefMPmUlivelittSWy0rP+oYVpn6A7GwVHNE8AWzoYOBNmlwks3LobaJxgHCYZAnyNo2GgpNRNQ==",
++          "requires": {
++            "safer-buffer": ">= 2.1.2 < 3.0.0"
++          }
++        }
++      }
++    },
+     "end-of-stream": {
+       "version": "1.4.4",
+       "resolved": "https://registry.npmjs.org/end-of-stream/-/end-of-stream-1.4.4.tgz",
+@@ -4745,6 +4972,15 @@
+       "resolved": "https://registry.npmjs.org/entities/-/entities-2.0.3.tgz",
+       "integrity": "sha512-MyoZ0jgnLvB2X3Lg5HqpFmn1kybDiIfEQmKzTb5apr51Rb+T3KdmMiqa70T+bhGnyv7bQ6WMj2QMHpGMmlrUYQ=="
+     },
++    "envify": {
++      "version": "3.4.1",
++      "resolved": "https://registry.npmjs.org/envify/-/envify-3.4.1.tgz",
++      "integrity": "sha1-1xIjKejfFoi6dxsSUBkXyc5cvOg=",
++      "requires": {
++        "jstransform": "^11.0.3",
++        "through": "~2.3.4"
++      }
++    },
+     "errno": {
+       "version": "0.1.7",
+       "resolved": "https://registry.npmjs.org/errno/-/errno-0.1.7.tgz",
+@@ -5683,6 +5919,35 @@
+         "bser": "2.1.1"
+       }
+     },
++    "fbjs": {
++      "version": "0.8.17",
++      "resolved": "https://registry.npmjs.org/fbjs/-/fbjs-0.8.17.tgz",
++      "integrity": "sha1-xNWY6taUkRJlPWWIsBpc3Nn5D90=",
++      "requires": {
++        "core-js": "^1.0.0",
++        "isomorphic-fetch": "^2.1.1",
++        "loose-envify": "^1.0.0",
++        "object-assign": "^4.1.0",
++        "promise": "^7.1.1",
++        "setimmediate": "^1.0.5",
++        "ua-parser-js": "^0.7.18"
++      },
++      "dependencies": {
++        "core-js": {
++          "version": "1.2.7",
++          "resolved": "https://registry.npmjs.org/core-js/-/core-js-1.2.7.tgz",
++          "integrity": "sha1-ZSKUwUZR2yj6k70tX/KYOk8IxjY="
++        },
++        "promise": {
++          "version": "7.3.1",
++          "resolved": "https://registry.npmjs.org/promise/-/promise-7.3.1.tgz",
++          "integrity": "sha512-nolQXZ/4L+bP/UGlkfaIujX9BKxGwmQ9OT4mOt5yvy8iK1h3wqTEJCijzGANTCCl9nWjY41juyAn2K3Q1hLLTg==",
++          "requires": {
++            "asap": "~2.0.3"
++          }
++        }
++      }
++    },
+     "figgy-pudding": {
+       "version": "3.5.2",
+       "resolved": "https://registry.npmjs.org/figgy-pudding/-/figgy-pudding-3.5.2.tgz",
+@@ -6301,6 +6566,14 @@
+         "minimalistic-crypto-utils": "^1.0.1"
+       }
+     },
++    "hoist-non-react-statics": {
++      "version": "3.3.2",
++      "resolved": "https://registry.npmjs.org/hoist-non-react-statics/-/hoist-non-react-statics-3.3.2.tgz",
++      "integrity": "sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==",
++      "requires": {
++        "react-is": "^16.7.0"
++      }
++    },
+     "hosted-git-info": {
+       "version": "2.8.8",
+       "resolved": "https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-2.8.8.tgz",
+@@ -6499,6 +6772,11 @@
+       "resolved": "https://registry.npmjs.org/https-browserify/-/https-browserify-1.0.0.tgz",
+       "integrity": "sha1-7AbBDgo0wPL68Zn3/X/Hj//QPHM="
+     },
++    "hyphenate-style-name": {
++      "version": "1.0.4",
++      "resolved": "https://registry.npmjs.org/hyphenate-style-name/-/hyphenate-style-name-1.0.4.tgz",
++      "integrity": "sha512-ygGZLjmXfPHj+ZWh6LwbC37l43MhfztxetbFCoYTM2VjkIUpeHgSNn7QIyVFj7YQ1Wl9Cbw5sholVJPzWvC2MQ=="
++    },
+     "iconv-lite": {
+       "version": "0.4.24",
+       "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.24.tgz",
+@@ -6867,6 +7145,11 @@
+         "is-extglob": "^2.1.1"
+       }
+     },
++    "is-in-browser": {
++      "version": "1.1.3",
++      "resolved": "https://registry.npmjs.org/is-in-browser/-/is-in-browser-1.1.3.tgz",
++      "integrity": "sha1-Vv9NtoOgeMYILrldrX3GLh0E+DU="
++    },
+     "is-negative-zero": {
+       "version": "2.0.0",
+       "resolved": "https://registry.npmjs.org/is-negative-zero/-/is-negative-zero-2.0.0.tgz",
+@@ -6998,6 +7281,15 @@
+       "resolved": "https://registry.npmjs.org/isobject/-/isobject-3.0.1.tgz",
+       "integrity": "sha1-TkMekrEalzFjaqH5yNHMvP2reN8="
+     },
++    "isomorphic-fetch": {
++      "version": "2.2.1",
++      "resolved": "https://registry.npmjs.org/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz",
++      "integrity": "sha1-YRrhrPFPXoH3KVB0coGf6XM1WKk=",
++      "requires": {
++        "node-fetch": "^1.0.1",
++        "whatwg-fetch": ">=0.10.0"
++      }
++    },
+     "isstream": {
+       "version": "0.1.2",
+       "resolved": "https://registry.npmjs.org/isstream/-/isstream-0.1.2.tgz",
+@@ -7722,6 +8014,116 @@
+         "verror": "1.10.0"
+       }
+     },
++    "jss": {
++      "version": "10.4.0",
++      "resolved": "https://registry.npmjs.org/jss/-/jss-10.4.0.tgz",
++      "integrity": "sha512-l7EwdwhsDishXzqTc3lbsbyZ83tlUl5L/Hb16pHCvZliA9lRDdNBZmHzeJHP0sxqD0t1mrMmMR8XroR12JBYzw==",
++      "requires": {
++        "@babel/runtime": "^7.3.1",
++        "csstype": "^3.0.2",
++        "is-in-browser": "^1.1.3",
++        "tiny-warning": "^1.0.2"
++      }
++    },
++    "jss-plugin-camel-case": {
++      "version": "10.4.0",
++      "resolved": "https://registry.npmjs.org/jss-plugin-camel-case/-/jss-plugin-camel-case-10.4.0.tgz",
++      "integrity": "sha512-9oDjsQ/AgdBbMyRjc06Kl3P8lDCSEts2vYZiPZfGAxbGCegqE4RnMob3mDaBby5H9vL9gWmyyImhLRWqIkRUCw==",
++      "requires": {
++        "@babel/runtime": "^7.3.1",
++        "hyphenate-style-name": "^1.0.3",
++        "jss": "10.4.0"
++      }
++    },
++    "jss-plugin-default-unit": {
++      "version": "10.4.0",
++      "resolved": "https://registry.npmjs.org/jss-plugin-default-unit/-/jss-plugin-default-unit-10.4.0.tgz",
++      "integrity": "sha512-BYJ+Y3RUYiMEgmlcYMLqwbA49DcSWsGgHpVmEEllTC8MK5iJ7++pT9TnKkKBnNZZxTV75ycyFCR5xeLSOzVm4A==",
++      "requires": {
++        "@babel/runtime": "^7.3.1",
++        "jss": "10.4.0"
++      }
++    },
++    "jss-plugin-global": {
++      "version": "10.4.0",
++      "resolved": "https://registry.npmjs.org/jss-plugin-global/-/jss-plugin-global-10.4.0.tgz",
++      "integrity": "sha512-b8IHMJUmv29cidt3nI4bUI1+Mo5RZE37kqthaFpmxf5K7r2aAegGliAw4hXvA70ca6ckAoXMUl4SN/zxiRcRag==",
++      "requires": {
++        "@babel/runtime": "^7.3.1",
++        "jss": "10.4.0"
++      }
++    },
++    "jss-plugin-nested": {
++      "version": "10.4.0",
++      "resolved": "https://registry.npmjs.org/jss-plugin-nested/-/jss-plugin-nested-10.4.0.tgz",
++      "integrity": "sha512-cKgpeHIxAP0ygeWh+drpLbrxFiak6zzJ2toVRi/NmHbpkNaLjTLgePmOz5+67ln3qzJiPdXXJB1tbOyYKAP4Pw==",
++      "requires": {
++        "@babel/runtime": "^7.3.1",
++        "jss": "10.4.0",
++        "tiny-warning": "^1.0.2"
++      }
++    },
++    "jss-plugin-props-sort": {
++      "version": "10.4.0",
++      "resolved": "https://registry.npmjs.org/jss-plugin-props-sort/-/jss-plugin-props-sort-10.4.0.tgz",
++      "integrity": "sha512-j/t0R40/2fp+Nzt6GgHeUFnHVY2kPGF5drUVlgkcwYoHCgtBDOhTTsOfdaQFW6sHWfoQYgnGV4CXdjlPiRrzwA==",
++      "requires": {
++        "@babel/runtime": "^7.3.1",
++        "jss": "10.4.0"
++      }
++    },
++    "jss-plugin-rule-value-function": {
++      "version": "10.4.0",
++      "resolved": "https://registry.npmjs.org/jss-plugin-rule-value-function/-/jss-plugin-rule-value-function-10.4.0.tgz",
++      "integrity": "sha512-w8504Cdfu66+0SJoLkr6GUQlEb8keHg8ymtJXdVHWh0YvFxDG2l/nS93SI5Gfx0fV29dO6yUugXnKzDFJxrdFQ==",
++      "requires": {
++        "@babel/runtime": "^7.3.1",
++        "jss": "10.4.0",
++        "tiny-warning": "^1.0.2"
++      }
++    },
++    "jss-plugin-vendor-prefixer": {
++      "version": "10.4.0",
++      "resolved": "https://registry.npmjs.org/jss-plugin-vendor-prefixer/-/jss-plugin-vendor-prefixer-10.4.0.tgz",
++      "integrity": "sha512-DpF+/a+GU8hMh/948sBGnKSNfKkoHg2p9aRFUmyoyxgKjOeH9n74Ht3Yt8lOgdZsuWNJbPrvaa3U4PXKwxVpTQ==",
++      "requires": {
++        "@babel/runtime": "^7.3.1",
++        "css-vendor": "^2.0.8",
++        "jss": "10.4.0"
++      }
++    },
++    "jstransform": {
++      "version": "11.0.3",
++      "resolved": "https://registry.npmjs.org/jstransform/-/jstransform-11.0.3.tgz",
++      "integrity": "sha1-CaeJk+CuTU70SH9hVakfYZDLQiM=",
++      "requires": {
++        "base62": "^1.1.0",
++        "commoner": "^0.10.1",
++        "esprima-fb": "^15001.1.0-dev-harmony-fb",
++        "object-assign": "^2.0.0",
++        "source-map": "^0.4.2"
++      },
++      "dependencies": {
++        "esprima-fb": {
++          "version": "15001.1.0-dev-harmony-fb",
++          "resolved": "https://registry.npmjs.org/esprima-fb/-/esprima-fb-15001.1.0-dev-harmony-fb.tgz",
++          "integrity": "sha1-MKlHMDxrjV6VW+4rmbHSMyBqaQE="
++        },
++        "object-assign": {
++          "version": "2.1.1",
++          "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-2.1.1.tgz",
++          "integrity": "sha1-Q8NuXVaf+OSBbE76i+AtJpZ8GKo="
++        },
++        "source-map": {
++          "version": "0.4.4",
++          "resolved": "https://registry.npmjs.org/source-map/-/source-map-0.4.4.tgz",
++          "integrity": "sha1-66T12pwNyZneaAMti092FzZSA2s=",
++          "requires": {
++            "amdefine": ">=0.0.4"
++          }
++        }
++      }
++    },
+     "jsx-ast-utils": {
+       "version": "2.4.1",
+       "resolved": "https://registry.npmjs.org/jsx-ast-utils/-/jsx-ast-utils-2.4.1.tgz",
+@@ -8011,6 +8413,14 @@
+         "object-visit": "^1.0.0"
+       }
+     },
++    "material-ui-icons": {
++      "version": "1.0.0-beta.36",
++      "resolved": "https://registry.npmjs.org/material-ui-icons/-/material-ui-icons-1.0.0-beta.36.tgz",
++      "integrity": "sha512-7rS6b2EV5QXCB/gTi/Ac9Wbxd+h9EZv1Td3rLLJe4IER8mVHRgdqZccB3EsjW2DrJ7opdY1+8X3/vyrS7CQNpg==",
++      "requires": {
++        "recompose": "^0.26.0"
++      }
++    },
+     "md5.js": {
+       "version": "1.3.5",
+       "resolved": "https://registry.npmjs.org/md5.js/-/md5.js-1.3.5.tgz",
+@@ -8410,6 +8820,15 @@
+         "tslib": "^1.10.0"
+       }
+     },
++    "node-fetch": {
++      "version": "1.7.3",
++      "resolved": "https://registry.npmjs.org/node-fetch/-/node-fetch-1.7.3.tgz",
++      "integrity": "sha512-NhZ4CsKx7cYm2vSrBAr2PvFOe6sWDf0UYLRqA6svUYg7+/TSfVAu49jYC4BvQ4Sms9SZgdqGBgroqfDhJdTyKQ==",
++      "requires": {
++        "encoding": "^0.1.11",
++        "is-stream": "^1.0.1"
++      }
++    },
+     "node-forge": {
+       "version": "0.9.0",
+       "resolved": "https://registry.npmjs.org/node-forge/-/node-forge-0.9.0.tgz",
+@@ -9109,6 +9528,11 @@
+         "ts-pnp": "^1.1.6"
+       }
+     },
++    "popper.js": {
++      "version": "1.16.1-lts",
++      "resolved": "https://registry.npmjs.org/popper.js/-/popper.js-1.16.1-lts.tgz",
++      "integrity": "sha512-Kjw8nKRl1m+VrSFCoVGPph93W/qrSO7ZkqPpTf7F4bk/sqcfWK019dWBUpE/fBOsOQY1dks/Bmcbfn1heM/IsA=="
++    },
+     "portfinder": {
+       "version": "1.0.28",
+       "resolved": "https://registry.npmjs.org/portfinder/-/portfinder-1.0.28.tgz",
+@@ -10089,6 +10513,11 @@
+         "react-is": "^16.8.4"
+       }
+     },
++    "private": {
++      "version": "0.1.8",
++      "resolved": "https://registry.npmjs.org/private/-/private-0.1.8.tgz",
++      "integrity": "sha512-VvivMrbvd2nKkiG38qjULzlc+4Vx4wm/whI9pQD35YrARNnhxeiRktSOhSukRLFNlzg6Br/cJPet5J/u19r/mg=="
++    },
+     "process": {
+       "version": "0.11.10",
+       "resolved": "https://registry.npmjs.org/process/-/process-0.11.10.tgz",
+@@ -10532,6 +10961,55 @@
+       "resolved": "https://registry.npmjs.org/react-is/-/react-is-16.13.1.tgz",
+       "integrity": "sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ=="
+     },
++    "react-material-alert": {
++      "version": "2.0.1",
++      "resolved": "https://registry.npmjs.org/react-material-alert/-/react-material-alert-2.0.1.tgz",
++      "integrity": "sha1-OPQel0oAcD/e7F79cMTzBU/qdoQ=",
++      "requires": {
++        "react": "^0.14.0"
++      },
++      "dependencies": {
++        "core-js": {
++          "version": "1.2.7",
++          "resolved": "https://registry.npmjs.org/core-js/-/core-js-1.2.7.tgz",
++          "integrity": "sha1-ZSKUwUZR2yj6k70tX/KYOk8IxjY="
++        },
++        "fbjs": {
++          "version": "0.6.1",
++          "resolved": "https://registry.npmjs.org/fbjs/-/fbjs-0.6.1.tgz",
++          "integrity": "sha1-lja3cF9bqWhNRLcveDISVK/IYPc=",
++          "requires": {
++            "core-js": "^1.0.0",
++            "loose-envify": "^1.0.0",
++            "promise": "^7.0.3",
++            "ua-parser-js": "^0.7.9",
++            "whatwg-fetch": "^0.9.0"
++          }
++        },
++        "promise": {
++          "version": "7.3.1",
++          "resolved": "https://registry.npmjs.org/promise/-/promise-7.3.1.tgz",
++          "integrity": "sha512-nolQXZ/4L+bP/UGlkfaIujX9BKxGwmQ9OT4mOt5yvy8iK1h3wqTEJCijzGANTCCl9nWjY41juyAn2K3Q1hLLTg==",
++          "requires": {
++            "asap": "~2.0.3"
++          }
++        },
++        "react": {
++          "version": "0.14.9",
++          "resolved": "https://registry.npmjs.org/react/-/react-0.14.9.tgz",
++          "integrity": "sha1-kRCmSXxJ1EuhwO3TF67CnC4NkdE=",
++          "requires": {
++            "envify": "^3.0.0",
++            "fbjs": "^0.6.1"
++          }
++        },
++        "whatwg-fetch": {
++          "version": "0.9.0",
++          "resolved": "https://registry.npmjs.org/whatwg-fetch/-/whatwg-fetch-0.9.0.tgz",
++          "integrity": "sha1-DjaExsuZlbQ+/J3wPkw2XZX9nMA="
++        }
++      }
++    },
+     "react-scripts": {
+       "version": "3.4.3",
+       "resolved": "https://registry.npmjs.org/react-scripts/-/react-scripts-3.4.3.tgz",
+@@ -10592,6 +11070,17 @@
+         "workbox-webpack-plugin": "4.3.1"
+       }
+     },
++    "react-transition-group": {
++      "version": "4.4.1",
++      "resolved": "https://registry.npmjs.org/react-transition-group/-/react-transition-group-4.4.1.tgz",
++      "integrity": "sha512-Djqr7OQ2aPUiYurhPalTrVy9ddmFCCzwhqQmtN+J3+3DzLO209Fdr70QrN8Z3DsglWql6iY1lDWAfpFiBtuKGw==",
++      "requires": {
++        "@babel/runtime": "^7.5.5",
++        "dom-helpers": "^5.0.1",
++        "loose-envify": "^1.4.0",
++        "prop-types": "^15.6.2"
++      }
++    },
+     "read-pkg": {
+       "version": "3.0.0",
+       "resolved": "https://registry.npmjs.org/read-pkg/-/read-pkg-3.0.0.tgz",
+@@ -10637,6 +11126,47 @@
+         "util.promisify": "^1.0.0"
+       }
+     },
++    "recast": {
++      "version": "0.11.23",
++      "resolved": "https://registry.npmjs.org/recast/-/recast-0.11.23.tgz",
++      "integrity": "sha1-RR/TAEqx5N+bTktmN2sqIZEkYtM=",
++      "requires": {
++        "ast-types": "0.9.6",
++        "esprima": "~3.1.0",
++        "private": "~0.1.5",
++        "source-map": "~0.5.0"
++      },
++      "dependencies": {
++        "esprima": {
++          "version": "3.1.3",
++          "resolved": "https://registry.npmjs.org/esprima/-/esprima-3.1.3.tgz",
++          "integrity": "sha1-/cpRzuYTOJXjyI1TXOSdv/YqRjM="
++        },
++        "source-map": {
++          "version": "0.5.7",
++          "resolved": "https://registry.npmjs.org/source-map/-/source-map-0.5.7.tgz",
++          "integrity": "sha1-igOdLRAh0i0eoUyA2OpGi6LvP8w="
++        }
++      }
++    },
++    "recompose": {
++      "version": "0.26.0",
++      "resolved": "https://registry.npmjs.org/recompose/-/recompose-0.26.0.tgz",
++      "integrity": "sha512-KwOu6ztO0mN5vy3+zDcc45lgnaUoaQse/a5yLVqtzTK13czSWnFGmXbQVmnoMgDkI5POd1EwIKSbjU1V7xdZog==",
++      "requires": {
++        "change-emitter": "^0.1.2",
++        "fbjs": "^0.8.1",
++        "hoist-non-react-statics": "^2.3.1",
++        "symbol-observable": "^1.0.4"
++      },
++      "dependencies": {
++        "hoist-non-react-statics": {
++          "version": "2.5.5",
++          "resolved": "https://registry.npmjs.org/hoist-non-react-statics/-/hoist-non-react-statics-2.5.5.tgz",
++          "integrity": "sha512-rqcy4pJo55FTTLWt+bU8ukscqHeE/e9KWvsOW2b/a3afxQZhwkQdT1rPPCJ0rYXdj4vNcasY8zHTH+jF/qStxw=="
++        }
++      }
++    },
+     "recursive-readdir": {
+       "version": "2.2.2",
+       "resolved": "https://registry.npmjs.org/recursive-readdir/-/recursive-readdir-2.2.2.tgz",
+@@ -12106,6 +12636,11 @@
+         "util.promisify": "~1.0.0"
+       }
+     },
++    "symbol-observable": {
++      "version": "1.2.0",
++      "resolved": "https://registry.npmjs.org/symbol-observable/-/symbol-observable-1.2.0.tgz",
++      "integrity": "sha512-e900nM8RRtGhlV36KGEU9k65K3mPb1WV70OdjfxlG2EAuM1noi/E/BaW/uMhL7bPEssK8QV57vN3esixjUvcXQ=="
++    },
+     "symbol-tree": {
+       "version": "3.2.4",
+       "resolved": "https://registry.npmjs.org/symbol-tree/-/symbol-tree-3.2.4.tgz",
+@@ -12332,6 +12867,11 @@
+       "resolved": "https://registry.npmjs.org/timsort/-/timsort-0.3.0.tgz",
+       "integrity": "sha1-QFQRqOfmM5/mTbmiNN4R3DHgK9Q="
+     },
++    "tiny-warning": {
++      "version": "1.0.3",
++      "resolved": "https://registry.npmjs.org/tiny-warning/-/tiny-warning-1.0.3.tgz",
++      "integrity": "sha512-lBN9zLN/oAf68o3zNXYrdCt1kP8WsiGW8Oo2ka41b2IM5JL/S1CTyX1rW0mb/zSuJun0ZUrDxx4sqvYS2FWzPA=="
++    },
+     "tmp": {
+       "version": "0.0.33",
+       "resolved": "https://registry.npmjs.org/tmp/-/tmp-0.0.33.tgz",
+@@ -12478,6 +13018,11 @@
+       "resolved": "https://registry.npmjs.org/typescript/-/typescript-3.7.5.tgz",
+       "integrity": "sha512-/P5lkRXkWHNAbcJIiHPfRoKqyd7bsyCma1hZNUGfn20qm64T6ZBlrzprymeu918H+mB/0rIg2gGK/BXkhhYgBw=="
+     },
++    "ua-parser-js": {
++      "version": "0.7.21",
++      "resolved": "https://registry.npmjs.org/ua-parser-js/-/ua-parser-js-0.7.21.tgz",
++      "integrity": "sha512-+O8/qh/Qj8CgC6eYBVBykMrNtp5Gebn4dlGD/kKXVkJNDwyrAwSIqwz8CDf+tsAIWVycKcku6gIXJ0qwx/ZXaQ=="
++    },
+     "unicode-canonical-property-names-ecmascript": {
+       "version": "1.0.4",
+       "resolved": "https://registry.npmjs.org/unicode-canonical-property-names-ecmascript/-/unicode-canonical-property-names-ecmascript-1.0.4.tgz",
+diff --git a/frontend/package.json b/frontend/package.json
+index 7e2e359..06f47b7 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -3,6 +3,9 @@
+   "version": "0.1.0",
+   "private": true,
+   "dependencies": {
++    "@material-ui/core": "^4.11.0",
++    "@material-ui/icons": "^4.9.1",
++    "@material-ui/lab": "^4.0.0-alpha.56",
+     "@testing-library/jest-dom": "^4.2.4",
+     "@testing-library/react": "^9.3.2",
+     "@testing-library/user-event": "^7.1.2",
+@@ -10,8 +13,10 @@
+     "@types/node": "^12.0.0",
+     "@types/react": "^16.9.0",
+     "@types/react-dom": "^16.9.0",
++    "material-ui-icons": "^1.0.0-beta.36",
+     "react": "^16.13.1",
+     "react-dom": "^16.13.1",
++    "react-material-alert": "^2.0.1",
+     "react-scripts": "3.4.3",
+     "typescript": "~3.7.2"
+   },
+diff --git a/frontend/src/App.css b/frontend/src/App.css
+index ff8d6c2..78048b3 100644
+--- a/frontend/src/App.css
++++ b/frontend/src/App.css
+@@ -1,11 +1,11 @@
+-.App {
+-  text-align: center;
+-}
+ 
++.App-logo img {
++  max-width: 90%;
++}
+ .App-logo {
+-  width: 55vw;
++  width: 100%;
+   pointer-events: none;
+-  margin-bottom: 20px;
++  margin: 0;
+ }
+ 
+ @media (prefers-reduced-motion: no-preference) {
+diff --git a/frontend/src/App.tsx b/frontend/src/App.tsx
+index a7050bf..059c97c 100644
+--- a/frontend/src/App.tsx
++++ b/frontend/src/App.tsx
+@@ -2,17 +2,155 @@ import React from 'react';
+ import logo from './logo.png';
+ import './App.css';
+ 
+-function App() {
+-  return (
+-    <div className="App">
+-      <header className="App-header">
+-        <img src={logo} className="App-logo" alt="logo" />
+-        <p>
+-          Welcome! And good luck! :)<br/>Edit <code>src/App.tsx</code> and save to reload.
+-        </p>
+-      </header>
+-    </div>
+-  );
++//Material Components
++import Container from '@material-ui/core/Container/Container';
++import Grid from '@material-ui/core/Grid/Grid';
++
++//Interface
++import { IOrder } from './interfaces/Order';
++import { INewOrder } from './interfaces/NewOrder';
++import { IResetOrder } from './interfaces/ResetOrder';
++
++//App Components
++import Menu from './components/menu/Menu';
++import Billing from './components/billing/Billing';
++import Order from './components/order/Order';
++
++//Api services
++import ApiUrl from './services/Api';
++
++interface IProps {
++  title: string
+ }
+ 
++interface IState {
++  orders: IOrder[];
++  newOrders: INewOrder[];
++  serveOrder: INewOrder[];
++  showOrder: IResetOrder[];
++  resetOrder: IResetOrder[];
++}
++
++export class App extends React.Component<IProps, IState> {
++
++  constructor(props: IProps) {
++    super(props);
++    this.state = {
++      orders: [],
++      newOrders: [],
++      serveOrder: [],
++      showOrder: [],
++      resetOrder: []
++    }
++  }
++
++  addSumary = (order: IOrder) => {
++    this.setState({
++      orders: [...this.state.orders, order]
++    })
++  }
++
++   createNewOrder = async (newOrder: INewOrder, resetOrder: IResetOrder) => {
++    this.setState({
++      newOrders: [...this.state.newOrders, newOrder],
++      orders: []
++    }, async () => {
++      let config = {
++        method: "POST",
++        headers: {
++          'Accept': 'application/json',
++          'Content-Type': 'application/json'
++        },
++        body: JSON.stringify({
++          order: this.state.newOrders[0].order,
++          price: this.state.newOrders[0].price,
++          completed: this.state.newOrders[0].completed
++        })
++      }
++      await fetch(`${ApiUrl}/order`, config)
++        .then(res => {
++          res.text().then(res => {
++            let data = JSON.parse(res);
++            let orderId = data.id;
++
++            setTimeout(() => {
++              this.setState({
++                showOrder: [... this.state.showOrder, resetOrder]
++              }, async () => {
++                let config = {
++                  method: "PUT",
++                  headers: {
++                    'Accept': 'application/json',
++                    'Content-Type': 'application/json'
++                  },
++                  body: JSON.stringify({
++                    completed: true
++                  })
++                }
++                  await fetch(`${ApiUrl}/order/${orderId}`, config)
++                  .then(res => {
++                    console.log(res)
++                  })
++                }
++              );
++            }, 1000);
++
++          })
++        })
++      }
++    )
++
++
++  }
++
++  resetOrder = ( resetOrder: IResetOrder ) => {
++    this.setState({
++      showOrder: [],
++      resetOrder: [ ...this.state.showOrder, resetOrder ]
++    });
++  }
++
++  deleteOrder = (id: number) => {
++    const orders: IOrder[] = this.state.orders.filter(
++      (order: IOrder) => order.id !== id
++    );
++    this.setState({orders});
++  }
++
++  render () {
++    return (
++      <div className="App">
++        <Container maxWidth="lg">
++          <Grid container spacing={3}>
++            <Grid item xs={12}>
++              <h1>{this.props.title}</h1>
++              <figure className="App-logo">
++                <img src={logo} />
++              </figure>
++            </Grid>
++            <Grid item xs={8}>
++              <Menu addSumary={this.addSumary} />
++            </Grid>
++            <Grid item xs={4}>
++              {this.state.showOrder[0]
++              ?
++                <Order
++                  resetOrder={this.resetOrder}
++                />
++              :
++                <Billing
++                  orders={this.state.orders}
++                  createNewOrder={this.createNewOrder}
++                  deleteOrder={this.deleteOrder}
++                />
++              }
++
++            </Grid>
++          </Grid>
++        </Container>
++      </div>
++    );
++  }
++};
++
+ export default App;
+diff --git a/frontend/src/assets/images/desserts.png b/frontend/src/assets/images/desserts.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..023efe3feaae96d23561cabf7e3974841cfb353f
+GIT binary patch
+literal 9008
+zcmV-0BhTE4P)<h;3K|Lk000e1NJLTq004jh004jp1^@s6!#-il00004b3#c}2nYxW
+zd<bNS00009a7bBm000Aa000Aa0e#hi%m4rY8FWQhbW?9;ba!ELWdL_~cP?peYja~^
+zaAhuUa%Y?FJQ@H1AOJ~3K~#90?VWjiRMp-8-)APvWSOjlY-A+_!oCFr5kVFO6s#Lo
+z>i%e}c12seXscFhU25B>{%qZ<KCS*9tytVeOT{9)?14bo0)!-FBm15?&mR*)X70H&
+z_fBR8Z2i1m^T(Wf?>Xn5^S$5mJ>TsJDJAC`gb>q#p8^X3;pO&9;3eQ8DP?=0`}Xe!
+zajp@75W)f+1%{Y>^qW%3=K|2Be`{FIb_W!gf%(Y?xW(TcF$>{Dfe>Q05F+Jl_s0lA
+z&UObBu=)60qF;Mq5JCt$upGDmC<J2qU8@E508dFN-##1t^9m_t(0@P%y~~f{+WCO=
+z;dkOJyvGut%wYfC1X9n&czgN<O$HD`L;w#0w*#@jr@+lp%A;=gO#rs_FB_Sj#-1l0
+z>HA;T+(P2*-*#`JK}s3tq5Tx#QeY0wB_^f!X922vfBS$nz^78m!yf8N0G<b~(0ySw
+z>Vf%E$}J|J3mAg31PCE6#5rKY`W4Rx-Vs7fmQr^0D{paszO}Q{<$q*&n5vmbMY|!u
+z4Zt^XvS+;=MON=`GVqPwXFmgeET!D&R;Lws11BMwMI7*o5MtuFvSSIT5GaI*5kmYC
+z=hr?=am!fXUbnJV_nTTfTnWGy8j3||<}$Q*!VyAPg%H;R#lVZe6ufUI-EkqXK?w18
+zA;idj<&WWE@^kD_oS&RXX0(PLPon_%rOCbo3;|mLgb<5>KjB@X?*Jx9DT{lbiwElZ
+z-w<sJr|Hjsa(T#p%eQE5?{Kdx4hREY$H`&*g&yE9z)s+|svB+{p2N>47Pw6O+R7U4
+z_<S3CPBpsU?f}j^7nTCQa{wX4AR)x7z<U_m&V>Un^zQ$`00#hw3J+J+H51s1e<vTn
+z3fzQZ^24nb-oIo9FU*{z`RXr78N}*EGZ|#l^wk1f@8>@H1i#7vLWnq=6OgHQPgr6i
+zowc>@#nXX1fv2UE9YTm6oP!R4LrU7ay0C?Y_B{|8rX+xscp&Q0Bhr{XJ)dDi2a})c
+z{Dp^wP*K&uiHdsGZaTyVtBcrMQfc6Aop^S}Bo=1qZ~2oWY&<!2EH{0o`PeTp+(-c7
+z*Cjv*@jUQfs%s%pQ4GKPZiZZO1#1^CruEn{_gk8QQBuldLWoAd-v46lb5D~H9o6@L
+z%)R$fbo_*&eoY*c!H@2m$AXJS8M=RW@d<wM<om2%yWit|S7fKNV%{{b^|f?&lk}H&
+zY3uHBzcgG*Sz@SD0fN7m0Ht_7c=l{&e((WV%a&n{h+xda536pA#wjy^k)42=1Gu(3
+z$j+ND+{ULXzHfN)0mc-h^VW;E^Y=gB&Y*;7-TUqsIn+>nQ6V7|CdI2R?G{3;7DC)3
+zgvd4AK|jLZ1h8IJ7&mq-wv;n$GI8ouGOoT_b?X8l#5YjN0j>g{jttO;^wc;$eC;mg
+z%^cyq*E+ap#&FiG_&%dYq-m}ViHcxO`e4I#rAJ1nio<}5fG2=rA;iy4?_`1ne-prq
+zzz+AqgU>ue^TC5IWd--%i*2xS0Dp&5Fm!=IT>t>NS%X;h+PBHePBPSKPsm7*=T|>j
+ztSL{4w3*sho;TR5raBCG7}z9)7-OR90l}{XAf@aEZUwsgmpi(;*nQu9NQa}ZEW~bS
+z)B_Kws!0UW-3#4!0(u-EIx3v^|9U4G=}MOC6S}({nzB%fxuN@dUWU<UCgRjTWSeTh
+zNBDgkD5cy6Jn3G3YWsGM{`IdeWyy2qka~$RVYtO@35X0+bAWrkHJ7yHScAPa2AeHZ
+zQx>9CM0rG#Eu4c(FX5--M=(7(ksN!JCk_$?JZrL>J|R$=zy|@1bi4nlr)WFjD!Grm
+z|9(Pay-%3?5>V6Bq`4;}J)S#mnrX7D-jSZ7?O(N43FQ@;(UCk-IGS~fXLI=41suO_
+z5l>DXi#=4i?9UfM++e=9<`579=+$%Iiqi_#hn}`JcHe)$%e~=)1~KxdKlNH?|0STM
+zqk~V1_Gs>T;O<4(!u>Bpr7Ac|X;Ui$-9V>DMR51ne0E<opHcBKs$1?GU=v;uFk66>
+z@^j#i?&US>)={=%g-cob<(HE*V}{52T075taclRL(9z{0W{{K^&6SJB51_~T2oDR<
+zYzNzWdZ=vmk3A<VI+B+zEL7Pyh6*8k^^Y)wKzjuJ7|>{ZihuoUI%;ZM%0~b4mslfp
+z4Ja-gV8>BSmCU_h1j6LHYzAqHW#CAYMqS}E3X|eFZ*YQpu?5KYTO$etlmMiZO*l=l
+zF6e4(WY2>Sx|Btvr7?W@a^1T63xWH~wW`{QV>1TOQ}0j-mi{CFK+l5cyCTB?0`3zi
+zrThq|CCvquAAd~cs#Pv!S<99YKVgEhp4N^|%1_nv$?iRDKYCPiJu_YN_4pNODOz6>
+ze-l7MXP2_ruZ_4NSWcne2ddl)_dN6vU5#f<rNUxi%p;FrQEc%ZS@|yMcm06*k3PxH
+zqsKMZ<6@PXHorl&6YwVi^hn9)l{KnM0W}#1g#e_Kb%4f)tD~ld;zu8KDT^LDl(b7P
+z)zsneVzlb+(kg5GiTqrx*3zE@@WQ?$G`R`3z=7Ve3mAgt7A~dy8%}er3(DSli<))o
+z0B9^OX7jDLQufwcrs}qZhcIrGMtSI0j49C8zq?N3=;0HNHn;M_O}kW=*7>CY4+yqf
+z_?^HkoSr*<*nR)~#7~?^`Frny59aA>7Ei(+9njqp*%=8$M}^beaz+@fY46~8ODh>s
+z`nwlzSX)`cwW~L&zWz3X;5ruc$RHuat-uSuKA(~l!<32H<mV11J}#2c!&A9nY93Z=
+z;F;OQ*FMe0ZAV<ntU{0*6GcH>3<Ys^3gTiI5of0$&Q462R)u^Tr#d?MebGT4-d;?P
+zdJgWDQa<kAH_+m&goX(r{((WS+N8v2u2?vpDHF1pIw9MyMjo@c=fSsl{#D~#Ims4I
+zY*;8!p;n?oLWl|pAv!dKQyrbGKUqtsLsxFu2~6%at_2ilD>CSIoVEh1-VM1~gZR!Z
+z7joSdQv#yi^#zm1Wtk#?>h=y_YzB3}vS3U;oW0n<YtWhe$cQkWdf-a7uKF>ze0};k
+zGx-2lEE-R4)}TN)a|);kbR(y6He`Ugz(*(uVA`Y{{`lC}$;mt`VSa|t+SbX7|9?H7
+zZ#u;GqT`&b)><X~fKP#o-2!F;f}j$B5F!(&*RbX@y5q(R_|;FAV6g;FpC1TRRyVR|
+zUj_RPo@D>QN)8>Z;oy;Ks%o2XI6RMSdTJa^&FwTcDUC|cNhvjIbblk5v4P<@_qCJU
+zuibgmOdkE|lA!b>Sm@~Nrs8A+6;+MY)HT!6(n)(q7onk6;$k8g*6WtOX<I2vZu%2#
+z?aGh+J5tK01KH1D62OZnV)(yx!v#Ec-{nE+!?}u8Yl^w<jz81gquCWS1H+`0#sd{h
+zA}B(j5Mn-x$v?j^SLty1pN5NP74Y<<OI7CVXq=9s0Yk8M0h*VHkB#K{Czl09f%9d+
+z*Ds&UvMUNzmu?n9j15$~0Uv!K#N{|cvt97Jhpr+$RX3dfKN3G*zL4lBWgMZ#$<|*8
+z#^<N;@+cgi#pMge1)=FL7m}0g{P50ss!Q_%6)O<v`~XQfQ@*(1=gSucve_>+?!0NH
+zo*v}7K(rTV4se-!8>2_0G4s5<05|*PMOdhn@7_8~btxeG<UkXErqhA)-2HdLf;ppA
+z#RWnLRhE?jAz+GjAw(pgS<t?=KuZ8UJq}J()^qfD9TuyFtn_$NlVg3}A=K10vuA$=
+z_GlZK>G2*Td_6%*$&q8Vlpe1oH93~d^mw8oy+<Xh(Am|)-u)FcHMf(I9#48|9HAj<
+zTUhGg7>4Bx=D-n+7u{vRQ$BS-2Z6M-j0apC^>VWY^{sE6T|Ip8k0M@vV<T%f9@Hp7
+z!oxzCKdXSHOD1vgtdWF;>KYEIu5IS!*Eg`EsEqA<$~aL`?{a-mg43kDbjc(pkJHUv
+z0l<!;GFH65o$Y(d*tw@nqoy5^m(0>7leqfQiC#_9D?i-Hr|V1Dv8Rl^`zz?|I+Gv3
+zYPE2|)I6?PJdq_AkJU*3GpFUL2*B^`Gmtrgt^)qnzwFYvqj~k2n|Wu|E`IQf71Y!<
+z8>%ZWJBdI1>Kdj`)`rl({n0Ld@QXL8J!Q;4Z^1>Qc<R9`HE!OWT|NBz53Bgy^PkeA
+z)yQcO8e-*px6S59cg-U_%=J5}sA}Z9KYN3ZKPxuWr@@2lJaPZmTy{opf3%AmzWa*%
+zt?Q+f8lieX2w)P$@8Om#@%y*UmUrDe)0ZTWQV1cJe{+s(DEW<SDEW;%viTu-<)R5b
+z)n$*i$v2++ufDq0u3Roh<)`{o*YKgqa?hIk`s#Y_iR)xsY=lpBUAbt2tl9gxY$*AS
+z{9@I;s(UK^K2HH8fXCclAUZ1Cr-AAJTmH>Cvgp(MWLk3Ufa(bk3z2{S^X>Al|L-Ol
+z8e$z#T{)SFa^L5_khd*6f57i|`GRrs(8dSl$ov$&dm_Iq1n?I#FK!DBkvW6nWO}?^
+zT7>X;Z+vW|$Lmqyp)zl9yiAPp{3S-%LZvM{ME81##UfK<qvf!{2{JM)bU=NwS}bx%
+zyj^A`#>x<@#pAtRI7o^==P4jEfDmFa&U`<q-tNs$PT;b!!$^-mlM|||$H9@BdRFe(
+zPi2F#wOs%+hGj5ocoy-IXFP;kI=a|>qKbER9-v+8d8>rgVqy01Ear~PCd_(9_^fSi
+zW9@<CtUYiHqobA@8_m}y3@2w$EY{ux5j_sciTWnq-FbjR)u#;B)Q2o7r8YRyNBBES
+zSRU|uoCiI4yO-;xjAT-lK8<uc9DK0*5Nq~pL&5qZCL)~c&l}B9bs{DJ8rnK|byE=s
+zt2_^QZc-de3rCWqpXrlB)u;H&#v&TqJp2328lJ_XF+=+%-W?M7SIIHn*->JcpnxgT
+zj|nFIrU(*3d>bgjz~lqW%FpyT`2Zmn3ya4MV^o^wTtC-M8Rc>E0b(P<xoP@X>^A+}
+zLblKlZk#sO<KzPjO^RpP)KMOD1dUElV)3|Px|0u1u61F4CNuLrZ%y6su@J(SJjF^3
+zm;ie7@;(jx0Y!2r6_V_cEEsJp#TvjhlM9H{@v%QIH=X=sV}YTOVWC_zxj^^&!ZAZV
+z5=egx8=Szjq3T4aQDLE6JxRYEcPtu{$6$Mu_Zyvv13nT$+-|r54;T;u2qD6NcY(Xi
+zJXe^VN{9(9pWPP5$TYP#?sT0=(8H*-B%&1=#**xjrt6xPs}4sSot|WvkN`rg77DYy
+zic2n!0M7~`e$y|-u1^>!2Y41(pt@iS4Pj~FNM+K7A?kD}9+9DV#%i&U8f*B=Ia61H
+zU0W6(qsq|X5h=0JgeX{ie}UF0hA5s9LU7~su|(-d7%d0>$8=-;;4=XTA%2K6fwBf!
+ziLu->e=1XR(llR!MF=tz%o9LXqBcA`Bi`<DjWttOiVuWjwFu?JWhR)<QkIdRB|v+4
+z7~_Tv=I)EnBWIAV^UN|K#8T4@_QEFu5JH>}{8~}Y+=3jwbJ1iHqMT-cNtv#Rlt-lv
+z(p}FzAu}O{)L2)ePGPn-gQpQp&PsLROhO1IX8Lx<lY1XhW21c{@W`-GM!79>ld_zB
+zii-&6uGy2ATacqCcs?zJFrK!wAFL0klQrt1cg<M|Xh#3)$pu_ABFklP)8g#3baYbN
+z+{Vb%K`b1Tr(A=LAT2JMQ!VYZb#*f>H=PUfGkxL!5n-W3hlf$!)JkMnC<{gpWq68j
+z!6?ZwQFL_oP~F@{PGTI3#}9MSLzqEYoSnwD4jS4zn3$Qu{871t_gV~v5DZIBATH9z
+zp7Lt<M<aou4?OU|8)n-ytp^Z7e3LUto%=8<Es0xa=(~AIDgBnj$zOGyesh2HDwyy0
+z^7>uuD$`gB0j`x&zHX*1Q=d<7BI5_$%k8!>mKJ*6_V_b{m%r)~_-FDVxbJuMqyoKN
+z#_!A~n>Nco=K;y?g-Z)Z`pnk9f_X%R>*_O7fVpPsGD`r<+zTdVrZ6%!;1RQ5!40F*
+zk{Fkv`4+*X^Qd70=ymbZ#Bfc?@l6u{3IoSf_1J%{_l!nEFv9^Z#hJyr4|ZD^d4tbh
+z#*Y7V<R>SnWPxa4k<mKL2n-|L3&v+8o6??DHMLOD&_ZQHGnEa^wDcxMj0g=OF49Iy
+zOf(}>6Mf!Bc|wmva-gb?<8_TxH@DK#(M4B}(?>7VY9%T>l%(iLG7@4KHaG!m0K(Mk
+zTH4rGS<A`B7V2A_+gWhh4pL&HNr{anH8#qyUBDs)<Ax;j`9V$I#8Ehps`Uyp1fa>q
+znil6><=NQQ!Iq;HY(7#>b(7{K7$wr;q8XW*L}7L+Np{~eaDj8sHyl2}<|E}awQG-`
+zQ^9TvV@ggM({j`M6k5Kbx~Y{dr4{Tcuco3w-v@GMzinNTJ(4LoX%uFq5)<L&XdJcL
+z*>K)m!+HQA#K*X~d4KD|iMp1!mX0po*;&HYqm^EhJnF$B1k;A5bMdHL)4Pm4<<+b^
+zSjPU7b@=M@AcSCeasub)4e@G{c1LqZC#&`xX2YQq1A6~SSt%?Ymrqo<T6<b@vW`D}
+zw#~ix6Dj3<BW(<b1H|e0$bV5<!P`4aXz3VOh7*UBtUFl7)}xhNJSvw94cN_l91h<2
+zVjo*d%LmjpI2AJcDr?zSSxaGd8rMu7VMz1%S;;Y0?Ky1N14$1KDcMq5!QP4*mW<11
+zvch7hGY5t_fEfbND7eEzTpxEx$!nYTu<e+C^BJ^vb@TR)5-J*+xq4E8?)u!+-pNbr
+zcT!s8|NP2ZO3SHkZsF$X<8)2EJr2p=widJb$iRuOKUzAvcy03@_Epw$-PBPoa+muY
+z^un+)!VCc%!cG5Q)!0I8?;6$PaPU7Hir9TZsiN$|pvVZmHhd^^a)yv#vthMZsBLSb
+zq_&>-50<jAtU}j4YV(nD>Ra2nY5G`fZpW;gIMu|9>vmG_;Sh(k_&64hAIrp?Y%&uQ
+z`VO9I>FD5CZ5`W=l=8ujU6h}yS3X}_)4*^4v6)-XAE#M++q=4XdHpU*PU@%j6~K8z
+zQdyLjO@3k=i4hU>I2_cqxAV`^GFI+CL{&?h?(^G@Rnp^d@Qw4v^nC<XjY^-%L%Nl?
+z_sN6|@EmYk|FX-+=QA@ulOBiU&+B$lT%pW%O`I*9r6Y%Nb-^%ZWe>sXVdqfU+{&v(
+z`*`^CE!6Ae*c+M@&mFTS_I(M*>Kb|G)2(#&Xinw?VAjYHeD~tHTsConS4WiY9tZDk
+z+s=Ql`Uh+F?o-|qX0>wX>`8rAKZlh3am_Ye2hTWLIQPvcWZCEuq<C;Qb4bbO$IDq!
+ze2~}nlu*;ECWg`JN!&PXELMx)UnR#_xkGb2)ALeFLmoqB2;gqq5*19%Nn>f@NZ#I2
+z!e=FFN7X55$-H^hLNa2^IZ4#Cw(+wy8+d+Ok&+|KDadBgm^|9Mx_R>BP1GsAoW$s8
+zet+Y2EIZ%(@vbVox^4sCd*wB1o3+w=LR19z%%6%aG=%qeA7piLspcL5+%|DEkIb6J
+zAoanKx+rgI;p!D1u)a*4GVsFuOqPt#=k+an*`!@^?vYad#z;G66hWHLp`xLg(wYYT
+zbwHcHAK;EjV_19RRi-B&oJ+;C3oqiO#q*RL<DbQ)?5nKhjW3FolRqY72t|)S?DOOU
+zEIWT1MUOwsm<+9}SY1mSZ+ubAzRFtushE7L5WKW_9?vek$n@j`q}iibbHkN<yHIUm
+z{nvrxl-4xpZ7tQTO93++AP+duzbwpZB`z|YD!2W8h{eK-m(JmavBn)EJ>l(=!z^9#
+zAsuckKGbTVOA*I6CSwSzfA%Aid>}j(svDb_^T^}uK3=A|rs_ku)ynHvE?`N%e~ttG
+z%kF*L^6o$AcFQe1*d9rJYlmv-8z!YZ=w7IT84hp+XWFtpboTUUCLiF5xikDW`2b7u
+zb9rR8_Dfbxetc9EAKts%Z<7y@6l3SZdzTX*rPa`>`tayQ)BQI20N0Nh!4q?}r>a#o
+zwW=n+8RuLXf?)!XQud%Y2F@KbGt>Fr6#plI_`%c(%*gO=czWiR>q$@WzkMP-A)aS$
+zx!&u2v$Kcr{i*76j|PJ8O&QP3Ohboa{IPeg48g29_(_}x87Luur!Sf1Hz$k!un56R
+zm(BHf{_eu@W4U(P)Bv>Z#I@6=vT(e9#<oz4g%=jh3CQ~!9NRWbW)w3;08+{-;5ohP
+zmkiBfjQ3NreMVkF99I?S=NGznap03rd1~XTf;@8L{d;b4e~cNN$R$IwJl*nK?;IJ1
+zFJ8fq1Ii8hRRw-eVWYt{Bh_u#Z8l~MH-5%qX>|=hdhHE<^x7MgR;%?FD$E$3kKLxW
+zR_gW5pYSlo9XRL46ilaxky4iT=Ka0X{o4FoQ!#En;d~uAU`k%DVbgR=M+f76{Bs)H
+zoU7ThtJhHe%x`s%r0)-l5KPI-Wp&YB!+rB7JdE*+QcBZ0XkP<EG`UOC?a>U0F_w&}
+zsk4()KAgS{kQ5m~UV=7A;=DZLv4*d2*xWby0F7;JyuM+x;pbIt<t4<C<ima+;8c4D
+zO`XO})k9*UNw+J<Su-a_;A@g7jhQRXW-NQwkN>%jCpK)uAtl$19?q+mUu?SZtXMk-
+z>s<BqQ-<ake*Rc(t)VhKsM^YkHNWlbayYnt<;T3fw*-q2{BYVtetnVm6hLvda85L7
+z6hJ<i9)0Bin&)B-*z4CFui&xuTl?(euNCcQ-Es4$qqr+X0AeBndvd6^wp4xchF5kL
+z^ZH(=9^WA)kFDQoXgqYr+NZhn8v&?-B;B#UR%<MIr{u8d##O4}&hDU`v83CUCj*xr
+z_SR@EhpI7hht60Bl>jsc<rGzWXQ8vRhq$C%0pA42c!d;RQ6JDVmc6#6>XSDt%FA~7
+zA7-^OJKKARy3Sbpba;`k1h5}BwQyZqJ4fn0AElZT7sIAouHn}4qbN*E=H<onn3H4v
+z*!NV0)1;maKM+v0rRtM6%*n~%<;C+TOiSj1%rxFxdKo!!o_#rv)HhPsrtx`b#yKaZ
+z;gb+3rE~}(wgMOSFW*vr((4P1Pfp^6O9z(WBrRGy*cJ7`BLG!fsy-RPjbjVA(S+S(
+zOZiDv@m49NPp4-OBte8`-}L^$(g9Rw9BJnu2T=7X5YQQ8<9k>)41@sw<zDbk$zffu
+z9DgEJ@wJ_G0`QRom_cVxkDk!1nG2&B2myQoxGehh?H#Nx)!NMc4b|6n)|Y@FaDdgN
+zWhythMx1lu6MQBBDP;%no_qP<_8w5&t;KWOidgi&@38!nwKR8{b00q^WdOByP8ZFc
+zT`d1(EsOs59iH1(Wat^4v3;+1E_}j3)5X7uTQut1C5P#DI6UeF9{GF=_pR9gzy}9Q
+zscUQJ<;BXga+FAjuwe_a(%yY$x#{TYrnb46#Ax5n1~7`+=4LwF{QYeqR^kn6LQmt{
+zAFbh)UCwOc9~>;Dy0wj;%}|~i1~?T>Z>!nAp%5@V3^YsFM}Ui8a$TF##n}@!xH&q$
+zva6WGr_Al+&z2mZ768o=-QiOWeUpD0?qlMPf0mZ1wtp=+=fGzShybLNZNU5P<!=^y
+zc1LSh2#RZun=@o7<$xd%fT|6%0-)+$Rb$d0I%E2N?;Q9Hf24~2n|r~^{fFrB;A}d5
+zh&IG&?J<)CpkVdoL68GfZI~4RRqv`Alhf#tl9l_Fu^yVSHw%9dzz2YfXJ~b68=oCL
+zq5HrE3cLB*WBT{2kg5o<IBQFQSq`9hSJjxD#%D)QP^}FTX~jAA1Hym_KuXyPeCS^O
+zX0iTmVA_yWjq#+UuHIu<lsi=G?w3IZsA_4W#Lbj#6@qCVIDpPre%L$q1A@P@g=-|y
+zxAq;<4U3Kr3uQuzHr)Di6LP>gB?FjP0#xrfAti}uo#dGgDS2z3lKl@z`acbS5x{$Z
+zi->x%rPbrQeu2Wp*~~JaV!L04B|ypkJ-B<XJyy=i7R`s=jzS0H3;aR=Qp#pvm3#S{
+z`}B7M7i22rfB|xVFM|-MdPmh*oQBRAuIe500mGjshboqVgSw&KsvwUYmDPrQ<5cTz
+zWqpIs*+7gyN=c={7r-b1G<9~eqf(RRRX5;8;v7Q-{KEdhzXb3u;4*vVO)ad~adAqD
+zj9_@8YXnb^lx!$7mRuq>Jd8-U908r(-PAT4J7dTf)Hb(hyn&*_La~P#OJB30tWvW*
+z9-bJl>rA@-cm?H6n)m6%Io5uG-v~fT*?__*;b}LZTn0?Y0cvfa=|h+dLsj>{*MAS}
+zUp;o8^p3S(;P1nuHLPjHzC*gpfKneYP&pugg5W?sft2gN2ll@rfYSeI_?rOU23$;g
+z#~Yj2d_v9ERnqU~6DJM(6ezWUK_&pB9H6tOhs`In-aL9cfXyc=Io_yo^XtMn#(sle
+z2|!AD3Rvx4u4fy_iHp$$Ika_mv$eulcw4aj0tR9R-da&bo16TQW{=W!q0<?&)xBfv
+zH~5<afPzJN+77BDV57^xxv&Hn-2tfCzyAJTXUzP{{vj{~uoAZ@mD2h~zR>xq)q<cw
+z0tm7)NGSstTmn?@q$dD=QBg&y*2B6R=h*rcekTAaWi7DAy<BfMpc;gA$IA_!q<Kzo
+z00RUdalVr~^awy_tk(37tzQuc4gjiUKt~Q3os_7FD?HWSK~a_WcU66T!IuHN6F^Z_
+zttJ>Y&KAz-By}zYow4#e`-i|0z~2EEQU1`W26mj(YQZc*==cYC*9WKuKTz7hfoK6$
+z?=pQzsxq8?$H{6AX}zO*aE__p5fB3C%~G+}y<CqA_-YrhhlOdZXk9%$R5!-dcfSAt
+z0-;GnK~(t^CFK#-O-+62<@>iE73%#6JTv-#oiSQ#HuHy31d0QIiDf_~4I4ELD?Nlw
+z`WG63s!pRj0M)zb?Er$w{vogg@D|__uC%}QlrpffFl{il5Z9p5vc_hWB&>njF~tAs
+zV5J(^00ETNH&WK<YPhq7SSd`?p7U5#U8{-?cHkV#fFNK5Af>DT*14CfC_Kz+WlEa%
+z<W3{YK(NfhN;9y59f0Z`rlh54qNG9h>tEM9mH|N^IRGeFmtNqAulj&s=>mM!0hrnU
+z>x@mn*gpiG0Nw)EE&bk_I*JvE5tJH1A9n(Qa1Ha-6-@OGs&_4}sZ%A4kOYwZLx2fD
+zN?8VMbT3!2y6Fl>(S5b2RNk;I2v&fIFKXcG);9LJt?7E(ULE$ov3CpuhCp)wFt{6t
+z2@hjzvi1N<Z@YoBD+72o1gZKyE_o0!iX1<|mi|v87zD7wy<k^W4F~G91FDV}@InCR
+zFb7bs|B81!P*=~cDrK@t&Di-H0Ve<{<xyaZd%23@Rkm^O96<XOo@{9F`J^rt98z+!
+zL8}MwCIl+?|B83i`TDo?j$J?z3=RMWmjRV<w7s(0WB7PvXox0lT6d3wYOOPc&!}!}
+zqT4MkyvirBKbkwc*ly4P^lY(zIEw_Zt+GlJ5u6eosmTJ`?QpPB$D`;p0<8>ED}g+(
+z{~J$KYH|nWCB$jY3_5(Ofo+vaE$_b%0Z1ti1KZupRX%UN#0>`8EbQC*Z!G>#$M0`@
+z@0bN1Qp%wGfS=&p*M9Z${`*O==Ed-tK?8*lVi=$~-|Q<WkuRk*mTPB#2$l>$?+fh;
+zR(oG!><ZT8Ll6m|7yljP_P&e=>KF|)Nt7u_DPI&q<N!D0b`0%Tpd5HfO8H_i8~s1M
+W6wyw9Nn{`Z0000<MNUMnLSTZ^VS01`
+
+literal 0
+HcmV?d00001
+
+diff --git a/frontend/src/assets/images/drinks.png b/frontend/src/assets/images/drinks.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..f63c07af3c703776a105d18860d48bf66a2a8bd6
+GIT binary patch
+literal 3239
+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
+Z{tq$ecdXqQO<w>2002ovPDHLkV1hE&_L2Yq
+
+literal 0
+HcmV?d00001
+
+diff --git a/frontend/src/assets/images/foods.png b/frontend/src/assets/images/foods.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..c5e5be2294bb4eb7c74d486cbbb5ad9c3ad29a9c
+GIT binary patch
+literal 6256
+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
+aa{eCy*DW7n(Wb-z0000<MNUMnLSTZmo$L7k
+
+literal 0
+HcmV?d00001
+
+diff --git a/frontend/src/components/billing/Billing.css b/frontend/src/components/billing/Billing.css
+new file mode 100644
+index 0000000..01a5aff
+--- /dev/null
++++ b/frontend/src/components/billing/Billing.css
+@@ -0,0 +1,32 @@
++.d-none {
++  display: none;
++}
++
++.d-flex {
++  display: flex;
++}
++
++.billing {
++  position: sticky;
++  top: 0;
++}
++.alert-order {
++  display: flex;
++  width: 100%;
++}
++.sumary-box {
++  border-bottom: 1px solid #c9c9c9;
++}
++.item-sumary {
++  margin-bottom: 0;
++}
++.price-box {
++  align-items: center;
++  display: flex;
++}
++.price {
++  width: 100%;
++}
++.btn-make-order {
++  margin: 15px 0 !important;
++}
+\ No newline at end of file
+diff --git a/frontend/src/components/billing/Billing.tsx b/frontend/src/components/billing/Billing.tsx
+new file mode 100644
+index 0000000..359b7ab
+--- /dev/null
++++ b/frontend/src/components/billing/Billing.tsx
+@@ -0,0 +1,45 @@
++import React, { Fragment } from 'react';
++import './Billing.css';
++
++//Materail component
++import Typography from '@material-ui/core/Typography';
++
++//App components
++import Sumary from './components/sumary/Sumary';
++import Total from './components/total/Total';
++
++//Interface
++import { IOrder } from "../../interfaces/Order";
++import { INewOrder } from '../../interfaces/NewOrder';
++import { IResetOrder } from '../../interfaces/ResetOrder';
++
++interface IBillingProps {
++  orders: IOrder[];
++  createNewOrder: (newOrder: INewOrder, resetOrder: IResetOrder) => void
++  deleteOrder: (id: number) => void
++}
++
++export class Billing extends React.Component<IBillingProps, any> {
++
++  render () {
++    return (
++      <Fragment>
++        <div className="billing">
++          <Typography component="h2" variant="h2" className="billing-typography">
++            Billing orders
++          </Typography>
++          <Sumary
++            orders={this.props.orders}
++            deleteOrder={this.props.deleteOrder}
++          />
++          <Total
++            orders={this.props.orders}
++            createNewOrder={this.props.createNewOrder}
++          />
++        </div>
++      </Fragment>
++    );
++  }
++}
++
++export default Billing;
+\ No newline at end of file
+diff --git a/frontend/src/components/billing/components/sumary/Sumary.tsx b/frontend/src/components/billing/components/sumary/Sumary.tsx
+new file mode 100644
+index 0000000..adb2946
+--- /dev/null
++++ b/frontend/src/components/billing/components/sumary/Sumary.tsx
+@@ -0,0 +1,49 @@
++import React from 'react';
++
++//Material components
++import IconButton from '@material-ui/core/IconButton';
++import DeleteIcon from '@material-ui/icons/Delete';
++import Typography from '@material-ui/core/Typography/Typography';
++
++//Interface
++import { IOrder } from '../../../../interfaces/Order';
++
++interface ISumaryProps {
++  orders: IOrder[]
++  deleteOrder: (id: number) => void
++}
++
++export class Sumary extends React.Component<ISumaryProps, any> {
++  render (): JSX.Element[] {
++    return this.props.orders.map ( ( order: IOrder, i: number )  => {
++      return (
++        <div className="sumary-box" key={order.id}>
++          <Typography
++            component="h5"
++            variant="h5"
++            className="item-sumary"
++          >
++            {order.order}
++          </Typography>
++          <div className="price-box">
++            <Typography
++              component="h3"
++              variant="h3"
++              className="price"
++            >
++              ${order.price}
++            </Typography>
++            <IconButton
++              color="secondary"
++              onClick={() => this.props.deleteOrder(order.id)}
++            >
++              <DeleteIcon />
++            </IconButton>
++          </div>
++        </div>
++      );
++    })
++  }
++}
++
++export default Sumary;
+\ No newline at end of file
+diff --git a/frontend/src/components/billing/components/total/Total.tsx b/frontend/src/components/billing/components/total/Total.tsx
+new file mode 100644
+index 0000000..85ccc61
+--- /dev/null
++++ b/frontend/src/components/billing/components/total/Total.tsx
+@@ -0,0 +1,110 @@
++import React, { Fragment, MouseEvent } from 'react';
++
++//Material component
++import Button from '@material-ui/core/Button/Button';
++import OrderIcon from '@material-ui/icons/Fastfood';
++import Alert from '@material-ui/lab/Alert';
++import Typography from '@material-ui/core/Typography/Typography';
++
++//Interface
++import { IOrder } from '../../../../interfaces/Order';
++import { INewOrder } from '../../../../interfaces/NewOrder';
++import { IResetOrder } from '../../../../interfaces/ResetOrder';
++
++interface ITotalProps {
++  orders: IOrder[];
++  createNewOrder: (newOrder: INewOrder, resetOrder: IResetOrder) => void
++}
++
++interface ITotalState {
++  total?: number;
++  makeOrder?: boolean;
++  waitOrder?: boolean;
++  validateOrder?: boolean;
++  date?: Date;
++}
++
++type clickMekeOrder = MouseEvent<HTMLButtonElement>
++
++export class Total extends React.Component<ITotalProps, ITotalState> {
++
++  constructor(props: ITotalProps) {
++    super(props);
++    this.state = {
++      total: undefined,
++      makeOrder: false,
++      waitOrder: false,
++      validateOrder: false,
++      date: undefined
++    }
++  }
++
++  getCurrentTimestamp = () => {
++    const date: Date = new Date();
++    return date.getTime();
++  }
++
++  makeOrder = (e: clickMekeOrder) => {
++
++    //Map all orders
++    const arrayOrders = this.props.orders.map((item, i: number) => {
++      return item.order;
++    });
++    const allOrders = arrayOrders.join(',');
++
++    //Map all price
++    const arrayPrice = this.props.orders.map((item, i: number) => {
++      return Number(item.price);
++    });
++
++    if ( arrayOrders.length > 0 ) {
++      const reducer = (accumulator: number , currentValue: number) => accumulator + currentValue;
++      const allTotal = arrayPrice.reduce(reducer);
++      //Change state
++      this.setState({
++        total: allTotal,
++        makeOrder: true,
++        waitOrder: true,
++      })
++      //Create new orders
++      const newOrder: INewOrder = {
++        id: this.getCurrentTimestamp(),
++        order: allOrders,
++        price: allTotal,
++        completed: false
++      }
++      const resetOrder: IResetOrder = {
++        showOrder: true
++      }
++      this.props.createNewOrder(newOrder, resetOrder);
++    } else {
++      this.setState({
++        validateOrder: true
++      })
++    }
++  }
++
++  render () {
++    return (
++      <Fragment>
++          { this.state.waitOrder && <Alert className="alert-order" severity="success">Sending Order to the chef wait for it</Alert>}
++          { this.state.validateOrder && <Alert className="alert-order" severity="error">There isn't any order</Alert>}
++
++          { this.state.makeOrder
++            ? <Typography component="h4" variant="h4">Total: ${this.state.total}</Typography>
++            : <Button
++                variant="contained"
++                color="primary"
++                onClick={e => this.makeOrder(e)}
++                endIcon={<OrderIcon />}
++                className="btn-make-order"
++                >
++                  Ordenar
++                </Button>
++          }
++      </Fragment>
++    )
++  }
++}
++
++export default Total;
+\ No newline at end of file
+diff --git a/frontend/src/components/menu/Menu.css b/frontend/src/components/menu/Menu.css
+new file mode 100644
+index 0000000..0d8d002
+--- /dev/null
++++ b/frontend/src/components/menu/Menu.css
+@@ -0,0 +1,23 @@
++.card-container {
++  display: flex;
++  margin: 10px;
++  width: 45%;
++}
++.card-details {
++  display: flex;
++  flex-direction: column;
++  width: 50%;
++}
++.card-content {
++  flex: 1 0 auto;
++}
++.card-typography {
++  font-size: 18px;
++  height: 70px;
++  line-height: 20px;
++  overflow: hidden;
++}
++.card-cover {
++  width: 151px;
++  background-size: initial !important;
++}
+\ No newline at end of file
+diff --git a/frontend/src/components/menu/Menu.tsx b/frontend/src/components/menu/Menu.tsx
+new file mode 100644
+index 0000000..e24dd3a
+--- /dev/null
++++ b/frontend/src/components/menu/Menu.tsx
+@@ -0,0 +1,28 @@
++import React, { Fragment } from 'react';
++import './Menu.css';
++
++//App components
++import MenuItems from './components/MenuItems';
++
++//interface
++import { IOrder } from '../../interfaces/Order';
++
++interface IOrderProps {
++  addSumary: (order: IOrder) => void
++}
++
++interface IOrderState {
++  orders: IOrder[];
++}
++
++export class Menu extends React.Component<IOrderProps, IOrderState> {
++  render() {
++    return (
++      <Fragment>
++        <MenuItems addSumary={this.props.addSumary}/>
++      </Fragment>
++    )
++  }
++}
++
++export default Menu;
+\ No newline at end of file
+diff --git a/frontend/src/components/menu/components/MenuItems.tsx b/frontend/src/components/menu/components/MenuItems.tsx
+new file mode 100644
+index 0000000..a72a3e6
+--- /dev/null
++++ b/frontend/src/components/menu/components/MenuItems.tsx
+@@ -0,0 +1,32 @@
++import React, { Fragment } from 'react';
++
++//App componets
++import Title from './title/Title';
++import FoodMenu from './foods/FoodMenu';
++import DrinkMenu from './drinks/DrinkMenu';
++import DessertMenu from './desserts/DessertMenu';
++
++//Interface
++import { IOrder } from '../../../interfaces/Order';
++
++interface IMenuItemProps {
++  addSumary: (order: IOrder) => void
++}
++
++export class MenuItems extends React.Component<IMenuItemProps, any> {
++
++  render() {
++    return (
++      <Fragment>
++        <Title title="Foods" />
++        <FoodMenu addSumary={this.props.addSumary} />
++        <Title title="Drinks" />
++        <DrinkMenu addSumary={this.props.addSumary} />
++        <Title title="Desserts" />
++        <DessertMenu addSumary={this.props.addSumary} />
++      </Fragment>
++    )
++  }
++}
++
++export default MenuItems;
+\ No newline at end of file
+diff --git a/frontend/src/components/menu/components/desserts/DessertMenu.tsx b/frontend/src/components/menu/components/desserts/DessertMenu.tsx
+new file mode 100644
+index 0000000..009ae06
+--- /dev/null
++++ b/frontend/src/components/menu/components/desserts/DessertMenu.tsx
+@@ -0,0 +1,81 @@
++import React, { Fragment } from 'react';
++
++//Material Components
++import Grid from '@material-ui/core/Grid/Grid';
++import Card from '@material-ui/core/Card';
++import CardContent from '@material-ui/core/CardContent';
++import CardMedia from '@material-ui/core/CardMedia';
++import Typography from '@material-ui/core/Typography';
++import Button from '@material-ui/core/Button';
++import CartIcon from '@material-ui/icons/AddShoppingCart';
++
++//Image Dessert
++import DessetImg from '../../../../assets/images/desserts.png';
++
++//Interface
++import { IOrder } from '../../../../interfaces/Order';
++
++interface IDessertMenuProps {
++  addSumary: (order: IOrder) => void
++}
++
++//Menu Dessert
++const MenuJson =  [
++  { "id": 9, "name": "Option A",  "price": "7.20" },
++  { "id": 10, "name": "Option B", "price": "7.50" },
++  { "id": 11, "name": "Option C", "price": "6.80" },
++]
++
++export class DessertMenu extends React.Component<IDessertMenuProps, any> {
++
++  handleNewSumary = (id: number, name: string, price: string ) => {
++    const newSumary: IOrder = {
++      id: id,
++      order: name,
++      price: price
++    }
++    this.props.addSumary(newSumary)
++  }
++
++  render () {
++    return (
++      <Fragment>
++        <Grid item xs={12} sm container>
++          {MenuJson.map((item, i: number) => (
++            <Card key={item.name} className="card-container">
++              <div className="card-details">
++                <CardContent className="card-content">
++                  <Typography
++                    component="h5"
++                    variant="h5"
++                    className="card-typography"
++                  >
++                    {item.name}
++                  </Typography>
++                  <Typography variant="subtitle1" className="card-typography">
++                    ${item.price}
++                  </Typography>
++                  <Button
++                    variant="contained"
++                    color="primary"
++                    onClick={() => this.handleNewSumary(item.id, item.name, item.price)}
++                    startIcon={<CartIcon />}
++                  >
++                    Add Cart
++                  </Button>
++                </CardContent>
++              </div>
++              <CardMedia
++                className="card-cover"
++                image={DessetImg}
++                title="Live from space album cover"
++              />
++            </Card>
++          ))}
++        </Grid>
++      </Fragment>
++    );
++  }
++}
++
++export default DessertMenu;
+\ No newline at end of file
+diff --git a/frontend/src/components/menu/components/drinks/DrinkMenu.tsx b/frontend/src/components/menu/components/drinks/DrinkMenu.tsx
+new file mode 100644
+index 0000000..e45c863
+--- /dev/null
++++ b/frontend/src/components/menu/components/drinks/DrinkMenu.tsx
+@@ -0,0 +1,81 @@
++import React, { Fragment } from 'react';
++
++//Material Components
++import Grid from '@material-ui/core/Grid/Grid';
++import Card from '@material-ui/core/Card';
++import CardContent from '@material-ui/core/CardContent';
++import CardMedia from '@material-ui/core/CardMedia';
++import Typography from '@material-ui/core/Typography';
++import Button from '@material-ui/core/Button';
++import CartIcon from '@material-ui/icons/AddShoppingCart';
++
++//Image Drink
++import DrinkImg from '../../../../assets/images/drinks.png';
++
++//Interface
++import { IOrder } from '../../../../interfaces/Order';
++
++interface IDrinkMenuProps {
++  addSumary: (order: IOrder) => void
++}
++
++//Menu Drink
++const MenuJson =  [
++  { "id": 5, "name": "Gin and Tonic",  "price": "9.05" },
++  { "id": 6, "name": "White Russian", "price": "9.20" },
++  { "id": 7, "name": "Mojito", "price": "8.00" },
++  { "id": 8, "name": "Old Fashioned", "price": "9.00" }
++]
++
++export class DrinkMenu extends React.Component<IDrinkMenuProps, any> {
++  handleNewOrder = (id: number, name: string, price: string) => {
++    const newOrder: IOrder = {
++      id: id,
++      order: name,
++      price: price
++    };
++    this.props.addSumary(newOrder);
++  };
++
++  render() {
++    return (
++      <Fragment>
++        <Grid item xs={12} sm container>
++          {MenuJson.map((item, i: number) => (
++            <Card key={item.name} className="card-container">
++              <div className="card-details">
++                <CardContent className="card-content">
++                  <Typography
++                    component="h5"
++                    variant="h5"
++                    className="card-typography"
++                  >
++                    {item.name}
++                  </Typography>
++                  <Typography variant="subtitle1" className="card-typography">
++                    ${item.price}
++                  </Typography>
++                  <Button
++                    variant="contained"
++                    color="primary"
++                    onClick={() => this.handleNewOrder(item.id, item.name, item.price)}
++                    startIcon={<CartIcon />}
++                  >
++                    Add Cart
++                  </Button>
++                </CardContent>
++              </div>
++              <CardMedia
++                className="card-cover"
++                image={DrinkImg}
++                title="Live from space album cover"
++              />
++            </Card>
++          ))}
++        </Grid>
++      </Fragment>
++    );
++  }
++}
++
++export default DrinkMenu;
+\ No newline at end of file
+diff --git a/frontend/src/components/menu/components/foods/FoodMenu.tsx b/frontend/src/components/menu/components/foods/FoodMenu.tsx
+new file mode 100644
+index 0000000..5baf5f3
+--- /dev/null
++++ b/frontend/src/components/menu/components/foods/FoodMenu.tsx
+@@ -0,0 +1,79 @@
++import React, { Fragment } from 'react';
++
++//Material Components
++import Grid from '@material-ui/core/Grid/Grid';
++import Card from '@material-ui/core/Card';
++import CardContent from '@material-ui/core/CardContent';
++import CardMedia from '@material-ui/core/CardMedia';
++import Typography from '@material-ui/core/Typography';
++import Button from '@material-ui/core/Button';
++import CartIcon from '@material-ui/icons/AddShoppingCart';
++
++//Image Food
++import FoodImg from '../../../../assets/images/foods.png';
++
++//Interface
++import { IOrder } from '../../../../interfaces/Order';
++
++interface IFoodMenuProps {
++  addSumary: (order: IOrder) => void
++}
++
++
++//Menu Food
++const MenuJson =  [
++  { "id": 1, "name": "Avo on toast",  "price": "8.50" },
++  { "id": 2, "name": "Pesto pasta with pine nuts and mozzarella", "price": "9.50" },
++  { "id": 3, "name": "Roasted pork belly with kimchi and soy sauce glaze", "price": "11.00" },
++  { "id": 4, "name": "Mac and cheese with crunchy seitan ‘bacon’ (V)", "price": "10.00" }
++]
++
++export class FoodMenu extends React.Component<IFoodMenuProps, any> {
++
++  handleNewOrder = (id: number, name: string, price: string ) => {
++    const newOrder: IOrder = {
++      id: id,
++      order: name,
++      price: price
++    }
++    this.props.addSumary(newOrder)
++  }
++
++  render () {
++    return (
++      <Fragment>
++        <Grid item xs={12} sm container>
++          { MenuJson.map( (item, i: number) => (
++            <Card key={item.name} className="card-container">
++              <div className="card-details">
++                <CardContent className="card-content">
++                  <Typography component="h5" variant="h5" className="card-typography">
++                    {item.name}
++                  </Typography>
++                  <Typography variant="subtitle1" className="card-typography">
++                    ${item.price}
++                  </Typography>
++                  <Button
++                    variant="contained"
++                    color="primary"
++                    onClick={() => this.handleNewOrder(item.id, item.name, item.price)}
++                    startIcon={<CartIcon />}
++                  >
++                    Add Cart
++                  </Button>
++                </CardContent>
++              </div>
++              <CardMedia
++                className="card-cover"
++                image={FoodImg}
++                title="Live from space album cover"
++              />
++            </Card>
++          ))}
++        </Grid>
++      </Fragment>
++    )
++  }
++}
++
++export default FoodMenu;
+\ No newline at end of file
+diff --git a/frontend/src/components/menu/components/title/Title.tsx b/frontend/src/components/menu/components/title/Title.tsx
+new file mode 100644
+index 0000000..f61faa8
+--- /dev/null
++++ b/frontend/src/components/menu/components/title/Title.tsx
+@@ -0,0 +1,16 @@
++import React from 'react';
++
++interface ITitleProps {
++  title: string
++}
++
++export class Title extends React.Component<ITitleProps, any> {
++
++  render () {
++    return (
++      <h1>{this.props.title}</h1>
++    )
++  }
++}
++
++export default Title;
+\ No newline at end of file
+diff --git a/frontend/src/components/order/Order.css b/frontend/src/components/order/Order.css
+new file mode 100644
+index 0000000..fe6022b
+--- /dev/null
++++ b/frontend/src/components/order/Order.css
+@@ -0,0 +1,9 @@
++.order-box {
++  position: sticky;
++  top: 0;
++}
++.new-order {
++  display: flex;
++  justify-content: center;
++  margin-top: 15px;
++}
+\ No newline at end of file
+diff --git a/frontend/src/components/order/Order.tsx b/frontend/src/components/order/Order.tsx
+new file mode 100644
+index 0000000..f9cbecf
+--- /dev/null
++++ b/frontend/src/components/order/Order.tsx
+@@ -0,0 +1,54 @@
++import React, { Fragment } from 'react'
++import './Order.css';
++
++//Material Component
++import Typography from '@material-ui/core/Typography/Typography';
++import Button from '@material-ui/core/Button/Button';
++import FoodIcon from '@material-ui/icons/Fastfood';
++import Alert from '@material-ui/lab/Alert/Alert';
++
++
++
++//Interface
++import { IResetOrder } from '../../interfaces/ResetOrder';
++
++interface IOrderProps {
++  resetOrder: (resetOrder: IResetOrder) => void
++}
++
++interface IOrderState {
++  resetOrder: IResetOrder[];
++}
++
++export class Order extends React.Component<IOrderProps, IOrderState> {
++
++  newOrder = () => {
++    const resetOrder: IResetOrder = {
++      showOrder: false
++    }
++    this.props.resetOrder(resetOrder);
++  }
++
++  render() {
++    return (
++      <div className="order-box">
++        <Typography component="h2" variant="h2" align="center">
++          Your order is ready
++        </Typography>
++        <Typography component="h5" variant="h5" align="center">
++          <FoodIcon/> Enjoy
++        </Typography>
++        <Alert severity="info">If you want to make another order you can click the new order button</Alert>
++        <div className="new-order">
++          <Button
++            color="primary"
++            variant="contained"
++            onClick={() => this.newOrder()}
++          >Make a new order</Button>
++        </div>
++      </div>
++    )
++  }
++}
++
++export default Order;
+\ No newline at end of file
+diff --git a/frontend/src/index.tsx b/frontend/src/index.tsx
+index f5185c1..3cfe535 100644
+--- a/frontend/src/index.tsx
++++ b/frontend/src/index.tsx
+@@ -6,7 +6,7 @@ import * as serviceWorker from './serviceWorker';
+ 
+ ReactDOM.render(
+   <React.StrictMode>
+-    <App />
++    <App title="iFood" />
+   </React.StrictMode>,
+   document.getElementById('root')
+ );
+diff --git a/frontend/src/interfaces/NewOrder.ts b/frontend/src/interfaces/NewOrder.ts
+new file mode 100644
+index 0000000..4f4c19d
+--- /dev/null
++++ b/frontend/src/interfaces/NewOrder.ts
+@@ -0,0 +1,6 @@
++export interface INewOrder {
++  id: number,
++  order: string,
++  price: number,
++  completed: boolean
++}
+\ No newline at end of file
+diff --git a/frontend/src/interfaces/Order.ts b/frontend/src/interfaces/Order.ts
+new file mode 100644
+index 0000000..bdc04a8
+--- /dev/null
++++ b/frontend/src/interfaces/Order.ts
+@@ -0,0 +1,5 @@
++export interface IOrder {
++  id: number,
++  order: string,
++  price: string
++}
+\ No newline at end of file
+diff --git a/frontend/src/interfaces/ResetOrder.ts b/frontend/src/interfaces/ResetOrder.ts
+new file mode 100644
+index 0000000..64150f1
+--- /dev/null
++++ b/frontend/src/interfaces/ResetOrder.ts
+@@ -0,0 +1,3 @@
++export interface IResetOrder {
++  showOrder: boolean
++}
+\ No newline at end of file
+diff --git a/frontend/src/services/Api.tsx b/frontend/src/services/Api.tsx
+new file mode 100644
+index 0000000..132250c
+--- /dev/null
++++ b/frontend/src/services/Api.tsx
+@@ -0,0 +1,2 @@
++const ApiUrl = "http://api.adfoodio.site/api";
++export default ApiUrl;
+\ No newline at end of file
+diff --git a/package-lock.json b/package-lock.json
+new file mode 100644
+index 0000000..cd055b8
+--- /dev/null
++++ b/package-lock.json
+@@ -0,0 +1,176 @@
++{
++  "requires": true,
++  "lockfileVersion": 1,
++  "dependencies": {
++    "body-parser": {
++      "version": "1.19.0",
++      "resolved": "https://registry.npmjs.org/body-parser/-/body-parser-1.19.0.tgz",
++      "integrity": "sha512-dhEPs72UPbDnAQJ9ZKMNTP6ptJaionhP5cBb541nXPlW60Jepo9RV/a4fX4XWW9CuFNK22krhrj1+rgzifNCsw==",
++      "requires": {
++        "bytes": "3.1.0",
++        "content-type": "~1.0.4",
++        "debug": "2.6.9",
++        "depd": "~1.1.2",
++        "http-errors": "1.7.2",
++        "iconv-lite": "0.4.24",
++        "on-finished": "~2.3.0",
++        "qs": "6.7.0",
++        "raw-body": "2.4.0",
++        "type-is": "~1.6.17"
++      }
++    },
++    "bytes": {
++      "version": "3.1.0",
++      "resolved": "https://registry.npmjs.org/bytes/-/bytes-3.1.0.tgz",
++      "integrity": "sha512-zauLjrfCG+xvoyaqLoV8bLVXXNGC4JqlxFCutSDWA6fJrTo2ZuvLYTqZ7aHBLZSMOopbzwv8f+wZcVzfVTI2Dg=="
++    },
++    "content-type": {
++      "version": "1.0.4",
++      "resolved": "https://registry.npmjs.org/content-type/-/content-type-1.0.4.tgz",
++      "integrity": "sha512-hIP3EEPs8tB9AT1L+NUqtwOAps4mk2Zob89MWXMHjHWg9milF/j4osnnQLXBCBFBk/tvIG/tUc9mOUJiPBhPXA=="
++    },
++    "cors": {
++      "version": "2.8.5",
++      "resolved": "https://registry.npmjs.org/cors/-/cors-2.8.5.tgz",
++      "integrity": "sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g==",
++      "requires": {
++        "object-assign": "^4",
++        "vary": "^1"
++      }
++    },
++    "debug": {
++      "version": "2.6.9",
++      "resolved": "https://registry.npmjs.org/debug/-/debug-2.6.9.tgz",
++      "integrity": "sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==",
++      "requires": {
++        "ms": "2.0.0"
++      }
++    },
++    "depd": {
++      "version": "1.1.2",
++      "resolved": "https://registry.npmjs.org/depd/-/depd-1.1.2.tgz",
++      "integrity": "sha1-m81S4UwJd2PnSbJ0xDRu0uVgtak="
++    },
++    "ee-first": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/ee-first/-/ee-first-1.1.1.tgz",
++      "integrity": "sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0="
++    },
++    "http-errors": {
++      "version": "1.7.2",
++      "resolved": "https://registry.npmjs.org/http-errors/-/http-errors-1.7.2.tgz",
++      "integrity": "sha512-uUQBt3H/cSIVfch6i1EuPNy/YsRSOUBXTVfZ+yR7Zjez3qjBz6i9+i4zjNaoqcoFVI4lQJ5plg63TvGfRSDCRg==",
++      "requires": {
++        "depd": "~1.1.2",
++        "inherits": "2.0.3",
++        "setprototypeof": "1.1.1",
++        "statuses": ">= 1.5.0 < 2",
++        "toidentifier": "1.0.0"
++      }
++    },
++    "iconv-lite": {
++      "version": "0.4.24",
++      "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.24.tgz",
++      "integrity": "sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==",
++      "requires": {
++        "safer-buffer": ">= 2.1.2 < 3"
++      }
++    },
++    "inherits": {
++      "version": "2.0.3",
++      "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.3.tgz",
++      "integrity": "sha1-Yzwsg+PaQqUC9SRmAiSA9CCCYd4="
++    },
++    "media-typer": {
++      "version": "0.3.0",
++      "resolved": "https://registry.npmjs.org/media-typer/-/media-typer-0.3.0.tgz",
++      "integrity": "sha1-hxDXrwqmJvj/+hzgAWhUUmMlV0g="
++    },
++    "mime-db": {
++      "version": "1.44.0",
++      "resolved": "https://registry.npmjs.org/mime-db/-/mime-db-1.44.0.tgz",
++      "integrity": "sha512-/NOTfLrsPBVeH7YtFPgsVWveuL+4SjjYxaQ1xtM1KMFj7HdxlBlxeyNLzhyJVx7r4rZGJAZ/6lkKCitSc/Nmpg=="
++    },
++    "mime-types": {
++      "version": "2.1.27",
++      "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.27.tgz",
++      "integrity": "sha512-JIhqnCasI9yD+SsmkquHBxTSEuZdQX5BuQnS2Vc7puQQQ+8yiP5AY5uWhpdv4YL4VM5c6iliiYWPgJ/nJQLp7w==",
++      "requires": {
++        "mime-db": "1.44.0"
++      }
++    },
++    "ms": {
++      "version": "2.0.0",
++      "resolved": "https://registry.npmjs.org/ms/-/ms-2.0.0.tgz",
++      "integrity": "sha1-VgiurfwAvmwpAd9fmGF4jeDVl8g="
++    },
++    "object-assign": {
++      "version": "4.1.1",
++      "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-4.1.1.tgz",
++      "integrity": "sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM="
++    },
++    "on-finished": {
++      "version": "2.3.0",
++      "resolved": "https://registry.npmjs.org/on-finished/-/on-finished-2.3.0.tgz",
++      "integrity": "sha1-IPEzZIGwg811M3mSoWlxqi2QaUc=",
++      "requires": {
++        "ee-first": "1.1.1"
++      }
++    },
++    "qs": {
++      "version": "6.7.0",
++      "resolved": "https://registry.npmjs.org/qs/-/qs-6.7.0.tgz",
++      "integrity": "sha512-VCdBRNFTX1fyE7Nb6FYoURo/SPe62QCaAyzJvUjwRaIsc+NePBEniHlvxFmmX56+HZphIGtV0XeCirBtpDrTyQ=="
++    },
++    "raw-body": {
++      "version": "2.4.0",
++      "resolved": "https://registry.npmjs.org/raw-body/-/raw-body-2.4.0.tgz",
++      "integrity": "sha512-4Oz8DUIwdvoa5qMJelxipzi/iJIi40O5cGV1wNYp5hvZP8ZN0T+jiNkL0QepXs+EsQ9XJ8ipEDoiH70ySUJP3Q==",
++      "requires": {
++        "bytes": "3.1.0",
++        "http-errors": "1.7.2",
++        "iconv-lite": "0.4.24",
++        "unpipe": "1.0.0"
++      }
++    },
++    "safer-buffer": {
++      "version": "2.1.2",
++      "resolved": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz",
++      "integrity": "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="
++    },
++    "setprototypeof": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/setprototypeof/-/setprototypeof-1.1.1.tgz",
++      "integrity": "sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw=="
++    },
++    "statuses": {
++      "version": "1.5.0",
++      "resolved": "https://registry.npmjs.org/statuses/-/statuses-1.5.0.tgz",
++      "integrity": "sha1-Fhx9rBd2Wf2YEfQ3cfqZOBR4Yow="
++    },
++    "toidentifier": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/toidentifier/-/toidentifier-1.0.0.tgz",
++      "integrity": "sha512-yaOH/Pk/VEhBWWTlhI+qXxDFXlejDGcQipMlyxda9nthulaxLZUNcUqFxokp0vcYnvteJln5FNQDRrxj3YcbVw=="
++    },
++    "type-is": {
++      "version": "1.6.18",
++      "resolved": "https://registry.npmjs.org/type-is/-/type-is-1.6.18.tgz",
++      "integrity": "sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==",
++      "requires": {
++        "media-typer": "0.3.0",
++        "mime-types": "~2.1.24"
++      }
++    },
++    "unpipe": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/unpipe/-/unpipe-1.0.0.tgz",
++      "integrity": "sha1-sr9O6FFKrmFltIF4KdIbLvSZBOw="
++    },
++    "vary": {
++      "version": "1.1.2",
++      "resolved": "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz",
++      "integrity": "sha1-IpnwLG3tMNSllhsLn3RSShj2NPw="
++    }
++  }
++}
+-- 
+2.25.2
+

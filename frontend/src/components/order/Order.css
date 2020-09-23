@@ -1,0 +1,9 @@
+.order-box {
+  position: sticky;
+  top: 0;
+}
+.new-order {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+}

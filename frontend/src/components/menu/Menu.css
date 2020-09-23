@@ -1,0 +1,23 @@
+.card-container {
+  display: flex;
+  margin: 10px;
+  width: 45%;
+}
+.card-details {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+}
+.card-content {
+  flex: 1 0 auto;
+}
+.card-typography {
+  font-size: 18px;
+  height: 70px;
+  line-height: 20px;
+  overflow: hidden;
+}
+.card-cover {
+  width: 151px;
+  background-size: initial !important;
+}
